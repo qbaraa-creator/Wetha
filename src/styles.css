@@ -1,0 +1,1100 @@
+/*
+ * القسم 18 — الواجهة أداة قراءة: المساحة للأشرطة الزمنية والاتجاهات لا للزخرفة.
+ * كل قيمة لون هنا مشتقة من جدول القسم 18.2 وقابلة للضبط من مكان واحد.
+ */
+
+:root {
+  --green-base: #15803D;
+  --green-alt: #1D9E4D;
+  --green-surface: #DCFCE7;
+  --orange-base: #C2410C;
+  --orange-alt: #E4691B;
+  --orange-surface: #FFEDD5;
+  --red-base: #B91C1C;
+  --red-alt: #7F1212;
+  --red-surface: #FEE2E2;
+  --neutral-base: #475569;
+  --neutral-surface: #F1F5F9;
+
+  --ink: #0F172A;
+  --ink-muted: #475569;
+  --line: #CBD5E1;
+  --line-soft: #E2E8F0;
+  --page: #F8FAFC;
+  --card: #FFFFFF;
+  --accent: #0F172A;
+  --focus: #1D4ED8;
+
+  --moon-dark: #334155;
+  --moon-light: #F8FAFC;
+  --moon-edge: #64748B;
+
+  --radius: 10px;
+  --gap: 12px;
+  --max-width: 1200px;
+  /* أرضية حجم النص: لا نص ثانوي أصغر منها مهما صغرت نسبة em. */
+  --text-min: 12px;
+  /* أصغر هدف لمسي مقبول. */
+  --touch: 44px;
+
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: 'SF Arabic', 'Geeza Pro', 'Segoe UI', system-ui, 'Noto Sans Arabic', 'Tahoma', sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  line-height: 1.3;
+}
+
+p {
+  margin: 0;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+small {
+  font-size: max(var(--text-min), 0.78em);
+  color: var(--ink-muted);
+}
+
+.muted {
+  color: var(--ink-muted);
+  font-size: max(var(--text-min), 0.85em);
+}
+
+.label {
+  color: var(--ink-muted);
+  font-size: max(var(--text-min), 0.8em);
+  display: inline-block;
+  margin-inline-end: 4px;
+}
+
+/* عزل القيم الرقمية عن اتجاه RTL — يمنع انعكاس «6–18» و«42–49–60%». */
+.num {
+  unicode-bidi: isolate;
+  direction: ltr;
+}
+
+/* نص لقارئات الشاشة فقط. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+a {
+  color: var(--focus);
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* ————— الهيكل ————— */
+
+.app {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 12px 32px;
+}
+
+/* تركيز برمجي عند تغيّر الصفحة — لا يحتاج حلقة تركيز مرئية. */
+.app-main:focus {
+  outline: none;
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 0;
+  background: var(--page);
+  border-block-end: 1px solid var(--line);
+}
+
+.app-header h1 {
+  font-size: 1.35rem;
+}
+
+.app-header__range,
+.app-header__updated {
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+}
+
+.app-header__side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.refresh {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--ink);
+}
+
+.refresh:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.tabs {
+  display: flex;
+  gap: 6px;
+  padding: 10px 0;
+}
+
+.tabs button {
+  flex: 1;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--ink-muted);
+}
+
+.tabs button.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.banner {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  font-size: 0.88rem;
+}
+
+.banner--cache {
+  background: var(--neutral-surface);
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.banner--warn {
+  background: var(--orange-surface);
+  border: 1px solid var(--orange-base);
+  color: var(--orange-base);
+}
+
+/* ملاحظة جودة بيانات — أخفت من التحذير لأنها لا تمنع القراءة. */
+.banner--note {
+  background: var(--card);
+  border: 1px solid var(--line);
+  color: var(--ink-muted);
+}
+
+.app-footer {
+  margin-top: 24px;
+  padding-top: 12px;
+  border-block-start: 1px solid var(--line);
+  font-size: 0.82rem;
+}
+
+/* ————— ملخص الأسبوع ————— */
+
+.week-summary {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--gap);
+  margin-bottom: var(--gap);
+}
+
+.summary-card {
+  background: var(--card);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+}
+
+.summary-card h2 {
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  font-weight: 600;
+}
+
+.summary-card__value {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.summary-card__detail {
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+}
+
+/* ————— صف اليوم ————— */
+
+.week-days {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.day-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    'head'
+    'facts'
+    'map'
+    'more';
+  gap: 8px;
+  background: var(--card);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+}
+
+.day-row__head {
+  grid-area: head;
+}
+
+.day-row__facts {
+  grid-area: facts;
+}
+
+.day-row__map {
+  grid-area: map;
+}
+
+.day-row__details {
+  grid-area: more;
+}
+
+.day-row--today {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.day-row__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.day-row__open {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: 44px;
+  padding: 4px 6px;
+  margin-inline-start: -6px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  text-align: start;
+}
+
+.day-row__open:hover {
+  background: var(--neutral-surface);
+}
+
+.day-row__name {
+  font-size: 1.02rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.day-row__date {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+.day-row__flags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  font-size: max(var(--text-min), 0.72rem);
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--neutral-surface);
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.chip--today {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.chip--most {
+  background: var(--red-surface);
+  border-color: var(--red-base);
+  color: var(--red-base);
+}
+
+.chip--least {
+  background: var(--green-surface);
+  border-color: var(--green-base);
+  color: var(--green-base);
+}
+
+.day-row__facts {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* عمود وسم ضيق + عمود الشريط: العمودان يجعلان الشريطين بالعرض نفسه،
+   فالمحور المرسوم أسفل الشريط الثاني يصلح للاثنين. */
+.day-row__map {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: start;
+  gap: 2px 8px;
+}
+
+.day-row__map-label {
+  font-size: max(var(--text-min), 0.78rem);
+  color: var(--ink-muted);
+  line-height: var(--touch);
+}
+
+/* علامة «الآن» تدفع الشريط للأسفل، فيتبعها الوسم ليبقى محاذيًا. */
+.day-row__map--has-now .day-row__map-label {
+  padding-top: 15px;
+}
+
+.day-row__astro {
+  min-width: 0;
+}
+
+.day-row__line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.day-row__dominant {
+  font-size: 0.86rem;
+  color: var(--ink-muted);
+}
+
+.day-row__numbers {
+  font-size: 0.9rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  align-items: baseline;
+}
+
+.day-row__narrative {
+  font-size: max(var(--text-min), 0.84rem);
+  color: var(--ink);
+}
+
+.day-row__astro p {
+  font-size: max(var(--text-min), 0.86rem);
+}
+
+/* ————— تفاصيل اليوم داخل بطاقة الأسبوع ————— */
+
+.day-row__details > summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--touch);
+  font-size: max(var(--text-min), 0.86rem);
+  font-weight: 600;
+  color: var(--ink-muted);
+  cursor: pointer;
+  list-style: none;
+}
+
+.day-row__details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.day-row__details > summary::after {
+  content: '▾';
+  font-size: 0.8em;
+}
+
+.day-row__details[open] > summary::after {
+  content: '▴';
+}
+
+.day-row__details-body {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px 16px;
+  padding-block-end: 4px;
+  border-block-start: 1px solid var(--line-soft);
+  padding-block-start: 8px;
+}
+
+.day-row__detail-group {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: max(var(--text-min), 0.86rem);
+}
+
+.day-row__detail-group h3 {
+  font-size: max(var(--text-min), 0.8rem);
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+.day-row__moon {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ————— الشارات والعدّادات ————— */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: max(var(--text-min), 0.78rem);
+  font-weight: 600;
+  white-space: nowrap;
+  border: 1px solid currentColor;
+}
+
+.badge--green {
+  background: var(--green-surface);
+  color: var(--green-base);
+}
+
+.badge--orange {
+  background: var(--orange-surface);
+  color: var(--orange-base);
+}
+
+.badge--red {
+  background: var(--red-surface);
+  color: var(--red-base);
+}
+
+.badge--neutral {
+  background: var(--neutral-surface);
+  color: var(--neutral-base);
+  border-color: var(--neutral-base);
+}
+
+.badge__glyph {
+  font-size: max(var(--text-min), 0.7em);
+}
+
+.counts {
+  font-size: max(var(--text-min), 0.8rem);
+  color: var(--ink-muted);
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.counts__glyph {
+  margin-inline-end: 3px;
+}
+
+.counts__item--green {
+  color: var(--green-base);
+}
+
+.counts__item--orange {
+  color: var(--orange-base);
+}
+
+.counts__item--red {
+  color: var(--red-base);
+}
+
+.counts__sep {
+  color: var(--line);
+}
+
+/* ————— الشريط الساعي ————— */
+
+.hourbar {
+  min-width: 0;
+}
+
+/* فسحة تستوعب شارة «الآن» فوق الشريط بلا تغطية النص المجاور. */
+.hourbar--has-now {
+  padding-top: 15px;
+}
+
+.hourbar__track {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(24, 1fr);
+  gap: 1px;
+  height: var(--touch);
+  border-radius: 5px;
+  background: var(--line-soft);
+  padding: 1px;
+  cursor: pointer;
+  /* الشريط نفسه هو الهدف اللمسي: السحب الأفقي يختار الساعة،
+     والتمرير الرأسي للصفحة يبقى للمتصفح. */
+  touch-action: pan-y;
+}
+
+/* الخلايا تصف الحالة لقارئة الشاشة؛ المؤشر يُعالَج على مستوى الشريط. */
+.hourbar__cell {
+  min-width: 0;
+  border-radius: 1px;
+  pointer-events: none;
+}
+
+/* أنماط مختلفة لكل حالة كي تبقى مميزة في التدرج الرمادي (القسم 21.7). */
+/*
+ * ثلاث درجات إضاءة وثلاثة أنماط مختلفة: أخضر سادة فاتح، برتقالي مخطط صاعد،
+ * أحمر مخطط هابط وأغمق. الفرق يبقى مقروءًا عند التحويل إلى تدرج رمادي.
+ */
+.hourbar__cell--green {
+  background: var(--green-alt);
+}
+
+.hourbar__cell--orange {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--orange-base) 0 3px,
+    var(--orange-alt) 3px 6px
+  );
+}
+
+.hourbar__cell--red {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--red-base) 0 3px,
+    var(--red-alt) 3px 6px
+  );
+}
+
+.hourbar__cell--missing {
+  background: var(--neutral-surface);
+  border: 1px dashed var(--neutral-base);
+}
+
+.hourbar__cell.is-dim {
+  opacity: 0.55;
+}
+
+.hourbar__cell.is-selected {
+  outline: 2px solid var(--ink);
+  outline-offset: -1px;
+  opacity: 1;
+}
+
+.hourbar__now {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background: var(--ink);
+  pointer-events: none;
+}
+
+.hourbar__now-label {
+  position: absolute;
+  top: -15px;
+  inset-inline-start: -16px;
+  font-size: var(--text-min);
+  background: var(--ink);
+  color: #fff;
+  padding: 0 4px;
+  border-radius: 3px;
+}
+
+.hourbar__axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--text-min);
+  color: var(--ink-muted);
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.hourbar__readout {
+  font-size: max(var(--text-min), 0.78rem);
+  color: var(--ink);
+  min-height: 1.3em;
+  margin-top: 2px;
+}
+
+/* ————— صفحة اليوم ————— */
+
+.day {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.day__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.day__head h2 {
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.day__date {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+.day__nav {
+  display: flex;
+  gap: 6px;
+}
+
+.day__nav button {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.day__nav button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card h3 {
+  font-size: 0.95rem;
+}
+
+.now__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.now__cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  min-width: 0;
+}
+
+.now__cell strong {
+  font-size: 1.25rem;
+}
+
+.now__direction {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.now__note {
+  margin-top: 4px;
+}
+
+.day-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px;
+}
+
+.day-summary__block {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.day-summary__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.day-summary__narrative {
+  font-size: 0.88rem;
+  padding-top: 6px;
+  border-block-start: 1px solid var(--line-soft);
+}
+
+.daymap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.daymap__line {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+}
+
+.daymap__label {
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  padding-top: 4px;
+}
+
+.segments {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.segments__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line-soft);
+  border-inline-start: 4px solid var(--neutral-base);
+  font-size: 0.86rem;
+}
+
+.segments__item--green {
+  border-inline-start-color: var(--green-base);
+  background: var(--green-surface);
+}
+
+.segments__item--orange {
+  border-inline-start-color: var(--orange-base);
+  background: var(--orange-surface);
+}
+
+.segments__item--red {
+  border-inline-start-color: var(--red-base);
+  background: var(--red-surface);
+}
+
+.segments__time {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.segments__direction {
+  font-weight: 600;
+}
+
+.segments__reason {
+  color: var(--ink-muted);
+  font-size: 0.82rem;
+}
+
+.sunmoon__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+}
+
+.sunmoon__moon {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ————— الجداول والمطويات ————— */
+
+.collapse__toggle,
+.legend__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.hourly {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.hourly th,
+.hourly td {
+  padding: 6px 8px;
+  border-block-end: 1px solid var(--line-soft);
+  text-align: start;
+}
+
+.hourly thead th {
+  position: sticky;
+  top: 0;
+  background: var(--card);
+  color: var(--ink-muted);
+  font-weight: 600;
+}
+
+.hourly__flag {
+  color: var(--ink-muted);
+}
+
+/* ————— مفتاح الألوان ————— */
+
+.legend {
+  margin-top: var(--gap);
+  background: var(--card);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  padding: 8px 12px 12px;
+}
+
+.legend__body {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+  padding-top: 8px;
+}
+
+.legend__group h3 {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  margin-bottom: 6px;
+}
+
+.legend__group li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.84rem;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.legend__note {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  margin-top: 4px;
+}
+
+/* ————— الحالات ————— */
+
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.skeleton__row {
+  background: var(--card);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skeleton__title {
+  height: 18px;
+  width: 40%;
+  border-radius: 4px;
+  background: var(--line-soft);
+}
+
+.skeleton__bar {
+  height: var(--touch);
+  border-radius: 5px;
+  background: var(--line-soft);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .skeleton__title,
+  .skeleton__bar {
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.empty {
+  background: var(--card);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  padding: 24px 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+/* ————— البوصلة ————— */
+
+.compass__ring {
+  fill: var(--neutral-surface);
+  stroke: var(--line);
+}
+
+.compass__north {
+  font-size: 7px;
+  fill: var(--ink-muted);
+}
+
+.compass__needle {
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+
+.compass__head {
+  fill: var(--ink);
+}
+
+.compass__hub {
+  fill: var(--ink);
+}
+
+/* ————— الشاشات الواسعة (القسم 19.2) ————— */
+
+@media (min-width: 480px) {
+  .now__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 720px) {
+  .week-summary {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .now__grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* الشاشات المتوسطة: عمودان — الهوية والأرقام يمينًا، الشريطان يسارًا.
+   بدونها كانت البطاقة تبقى عمودًا واحدًا حتى 999 بكسل فتضيع نصف العرض. */
+@media (min-width: 600px) and (max-width: 999px) {
+  .day-row {
+    grid-template-columns: minmax(150px, 230px) minmax(0, 1fr);
+    grid-template-areas:
+      'head map'
+      'facts map'
+      'more more';
+    align-items: start;
+    gap: 8px 16px;
+  }
+
+  .day-row__head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (min-width: 1000px) {
+  body {
+    font-size: 15.5px;
+  }
+
+  /* أعمدة ثابتة العرض تُبقي المحاور الزمنية متراصفة بين كل الأيام. */
+  .day-row {
+    grid-template-columns: 190px minmax(200px, 300px) minmax(0, 1fr);
+    grid-template-areas:
+      'head facts map'
+      'more more more';
+    align-items: start;
+    gap: 8px 16px;
+  }
+
+  .day-row__head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
