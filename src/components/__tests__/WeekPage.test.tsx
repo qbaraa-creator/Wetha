@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { rankWeek } from '../../domain/ranking';
 import { TEST_NOW, makeTestForecast } from '../../test/forecast';
@@ -16,21 +16,23 @@ describe('صفحة الأسبوع', () => {
     vi.useRealTimers();
   });
 
-  it('لا تسمي يومًا ذا صفر ساعات خضراء بأنه الأفضل أخضر', () => {
+  it('يعرض ملخص خمسة أيام لكل من الرياح والرطوبة', () => {
     const forecast = makeTestForecast();
-    render(<WeekPage forecast={forecast} ranking={rankWeek(forecast.days)} onOpenDay={vi.fn()} />);
+    render(<WeekPage forecast={forecast} ranking={rankWeek(forecast.days)} />);
 
-    expect(screen.getByRole('heading', { name: 'أقل ساعات رياح حمراء' })).toBeVisible();
-    expect(screen.getByText(/لا توجد ساعات رياح خضراء هذا الأسبوع/)).toBeVisible();
+    const outlook = screen.getByRole('region', { name: 'الساعات المناسبة خلال 5 أيام' });
+    expect(within(outlook).getAllByRole('article')).toHaveLength(5);
+    expect(within(outlook).getAllByText('رياح')).toHaveLength(5);
+    expect(within(outlook).getAllByText('رطوبة')).toHaveLength(5);
   });
 
-  it('يعرض محورًا واحدًا فقط لكل يوم وتفاصيل مطوية افتراضيًا', () => {
+  it('يعرض شريطًا مركبًا ومحورًا واحدًا فقط لكل يوم وتفاصيل مطوية افتراضيًا', () => {
     const forecast = makeTestForecast();
-    const { container } = render(
-      <WeekPage forecast={forecast} ranking={rankWeek(forecast.days)} onOpenDay={vi.fn()} />
-    );
+    const { container } = render(<WeekPage forecast={forecast} ranking={rankWeek(forecast.days)} />);
 
+    expect(container.querySelectorAll('.hourbar__track')).toHaveLength(7);
     expect(container.querySelectorAll('.hourbar__axis')).toHaveLength(7);
+    expect(container.querySelectorAll('.hourbar__lane')).toHaveLength(7 * 24 * 2);
     expect(container.querySelectorAll('details')).toHaveLength(7);
     expect(container.querySelectorAll('details[open]')).toHaveLength(0);
   });
@@ -39,7 +41,7 @@ describe('صفحة الأسبوع', () => {
     vi.useRealTimers();
     const user = userEvent.setup();
     const forecast = makeTestForecast();
-    render(<WeekPage forecast={forecast} ranking={rankWeek(forecast.days)} onOpenDay={vi.fn()} />);
+    render(<WeekPage forecast={forecast} ranking={rankWeek(forecast.days)} />);
 
     const summary = screen.getByText('تفاصيل الأربعاء');
     const details = summary.closest('details');
@@ -49,12 +51,16 @@ describe('صفحة الأسبوع', () => {
     expect(screen.getAllByText('ساعات الرياح')[0]).toBeInTheDocument();
   });
 
-  it('يفتح التاريخ الصحيح من زر اليوم', () => {
-    const onOpenDay = vi.fn();
+  it('يجمع الساعات الخضراء المتتالية في الملخص ويستبعد الماضي من اليوم', () => {
     const forecast = makeTestForecast();
-    render(<WeekPage forecast={forecast} ranking={rankWeek(forecast.days)} onOpenDay={onOpenDay} />);
+    for (const hour of [13, 14]) {
+      forecast.days[0].hours[hour].windSeverity = 'green';
+      forecast.days[0].hours[hour].humiditySeverity = 'green';
+    }
+    render(<WeekPage forecast={forecast} ranking={rankWeek(forecast.days)} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /الأربعاء.*19\/08\/2026/ }));
-    expect(onOpenDay).toHaveBeenCalledWith('2026-08-19');
+    const firstDay = screen.getByRole('heading', { name: /الأربعاء 19\/08\/2026/ }).closest('article');
+    expect(firstDay).not.toBeNull();
+    expect(within(firstDay!).getAllByText('1:00 م–3:00 م')).toHaveLength(2);
   });
 });

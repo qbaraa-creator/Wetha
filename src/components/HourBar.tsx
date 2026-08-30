@@ -3,13 +3,14 @@ import { SEVERITY_SHORT_LABELS } from '../config/appConfig';
 import { displayNumber } from '../domain/narrative';
 import { formatHour12 } from '../domain/time';
 import { DIRECTION_NAMES_AR, describeWindReason, getWindReasonCode } from '../domain/wind';
-import type { HourlyWeatherPoint, Severity } from '../domain/types';
+import type { HourlyWeatherPoint } from '../domain/types';
 
 export type BarKind = 'wind' | 'humidity';
 
 interface HourBarProps {
   hours: HourlyWeatherPoint[];
-  kind: BarKind;
+  /** توافق انتقالي مع المكوّن القديم؛ غيابه يرسم الطبقتين المدمجتين. */
+  kind?: BarKind;
   label: string;
   /** موضع علامة «الآن» كساعة كسرية 0–24، أو null لليوم غير الحالي. */
   nowHour?: number | null;
@@ -18,12 +19,7 @@ interface HourBarProps {
   dimBefore?: number | null;
 }
 
-function severityOf(point: HourlyWeatherPoint, kind: BarKind): Severity | null {
-  return kind === 'wind' ? point.windSeverity : point.humiditySeverity;
-}
-
-/** نص التلميح لكل ساعة: الوقت والاتجاه والسرعة والهبّة والرطوبة وسبب اللون (القسم 9.3). */
-export function describeHour(point: HourlyWeatherPoint): string {
+function describeMeasurements(point: HourlyWeatherPoint): string[] {
   const parts = [formatHour12(point.localHour)];
 
   if (point.direction && point.windDegree !== null) {
@@ -32,6 +28,12 @@ export function describeHour(point: HourlyWeatherPoint): string {
   parts.push(`سرعة ${displayNumber(point.windSpeedKmh)} كم/س`);
   parts.push(`هبّة ${displayNumber(point.windGustKmh)} كم/س`);
   parts.push(`رطوبة ${displayNumber(point.humidity)}%`);
+  return parts;
+}
+
+/** نص التلميح لكل ساعة: الوقت والاتجاه والسرعة والهبّة والرطوبة وسبب اللون (القسم 9.3). */
+export function describeHour(point: HourlyWeatherPoint): string {
+  const parts = describeMeasurements(point);
 
   if (point.windSeverity) {
     const reason =
@@ -50,8 +52,13 @@ export function describeHour(point: HourlyWeatherPoint): string {
   return parts.join(' · ');
 }
 
+/** القراءة المرئية المختصرة؛ أسماء الألوان تبقى في وصف الوصول فقط. */
+export function describeHourValues(point: HourlyWeatherPoint): string {
+  return describeMeasurements(point).join(' · ');
+}
+
 /**
- * شريط ساعي من 24 خلية.
+ * شريط ساعي مركّب من 24 خلية: النصف الأعلى للرياح والأسفل للرطوبة.
  * التنقل بلوحة المفاتيح داخل الشريط بالأسهم مع محطة Tab واحدة (القسم 21.7)،
  * والتفاصيل تُعرض في لوحة نصية أسفل الشريط لا في تلميح يعتمد على Hover وحده.
  *
@@ -173,7 +180,6 @@ export function HourBar({
         }}
       >
         {slots.map((point, hour) => {
-          const severity = point ? severityOf(point, kind) : null;
           const dimmed = dimBefore !== null && hour < dimBefore;
           return (
             <div
@@ -184,13 +190,26 @@ export function HourBar({
               aria-label={point ? describeHour(point) : `${formatHour12(hour)} · لا بيانات`}
               className={[
                 'hourbar__cell',
-                `hourbar__cell--${severity ?? 'missing'}`,
+                kind ? 'hourbar__cell--single' : '',
                 dimmed ? 'is-dim' : '',
                 selected === hour ? 'is-selected' : ''
               ]
                 .filter(Boolean)
                 .join(' ')}
-            />
+            >
+              {kind !== 'humidity' ? (
+                <span
+                  className={`hourbar__lane hourbar__lane--wind hourbar__lane--${point?.windSeverity ?? 'missing'}`}
+                  aria-hidden="true"
+                />
+              ) : null}
+              {kind !== 'wind' ? (
+                <span
+                  className={`hourbar__lane hourbar__lane--humidity hourbar__lane--${point?.humiditySeverity ?? 'missing'}`}
+                  aria-hidden="true"
+                />
+              ) : null}
+            </div>
           );
         })}
         {nowHour !== null ? (
@@ -214,7 +233,7 @@ export function HourBar({
 
       <p className="hourbar__readout" aria-live="polite">
         {selectedPoint
-          ? describeHour(selectedPoint)
+          ? describeHourValues(selectedPoint)
           : selected !== null
             ? `${formatHour12(selected)} · لا بيانات لهذه الساعة`
             : ''}

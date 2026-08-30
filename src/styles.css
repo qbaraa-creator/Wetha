@@ -136,11 +136,6 @@ button {
   padding: 0 12px 32px;
 }
 
-/* تركيز برمجي عند تغيّر الصفحة — لا يحتاج حلقة تركيز مرئية. */
-.app-main:focus {
-  outline: none;
-}
-
 .app-header {
   position: sticky;
   top: 0;
@@ -185,25 +180,8 @@ button {
   cursor: progress;
 }
 
-.tabs {
-  display: flex;
-  gap: 6px;
-  padding: 10px 0;
-}
-
-.tabs button {
-  flex: 1;
-  min-height: 44px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--card);
-  color: var(--ink-muted);
-}
-
-.tabs button.is-active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
+.app-main {
+  padding-top: 10px;
 }
 
 .banner {
@@ -239,35 +217,78 @@ button {
   font-size: 0.82rem;
 }
 
-/* ————— ملخص الأسبوع ————— */
+/* ————— ملخص الساعات المناسبة ————— */
 
-.week-summary {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--gap);
-  margin-bottom: var(--gap);
-}
-
-.summary-card {
+.green-outlook {
   background: var(--card);
   border: 1px solid var(--line-soft);
   border-radius: var(--radius);
-  padding: 10px 12px;
+  padding: 12px;
+  margin-bottom: var(--gap);
 }
 
-.summary-card h2 {
-  font-size: 0.82rem;
+.green-outlook__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  margin-bottom: 8px;
+}
+
+.green-outlook__head h2 {
+  font-size: 1rem;
+}
+
+.green-outlook__head p {
+  font-size: max(var(--text-min), 0.78rem);
   color: var(--ink-muted);
-  font-weight: 600;
 }
 
-.summary-card__value {
-  font-size: 1.05rem;
-  font-weight: 700;
+.green-outlook__days {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(210px, 78vw);
+  gap: 8px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scroll-snap-type: inline proximity;
+  padding-bottom: 3px;
 }
 
-.summary-card__detail {
-  font-size: 0.82rem;
+.green-outlook__day {
+  min-width: 0;
+  scroll-snap-align: start;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.green-outlook__day h3 {
+  font-size: max(var(--text-min), 0.82rem);
+  margin-bottom: 5px;
+}
+
+.green-outlook__day p {
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr);
+  gap: 6px;
+  align-items: start;
+  font-size: max(var(--text-min), 0.78rem);
+}
+
+.green-outlook__metric {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ink-muted);
+}
+
+.green-outlook__windows {
+  min-width: 0;
+}
+
+.green-outlook__none {
   color: var(--ink-muted);
 }
 
@@ -324,22 +345,12 @@ button {
   min-width: 0;
 }
 
-.day-row__open {
+.day-row__identity {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
-  min-height: 44px;
-  padding: 4px 6px;
-  margin-inline-start: -6px;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  text-align: start;
-}
-
-.day-row__open:hover {
-  background: var(--neutral-surface);
+  padding-block: 4px;
 }
 
 .day-row__name {
@@ -396,8 +407,7 @@ button {
   gap: 4px;
 }
 
-/* عمود وسم ضيق + عمود الشريط: العمودان يجعلان الشريطين بالعرض نفسه،
-   فالمحور المرسوم أسفل الشريط الثاني يصلح للاثنين. */
+/* عمود وسم ضيق + شريط واحد بطبقتين متطابقتين زمنيًا. */
 .day-row__map {
   min-width: 0;
   display: grid;
@@ -406,14 +416,19 @@ button {
   gap: 2px 8px;
 }
 
-.day-row__map-label {
+.day-row__map-labels {
+  display: grid;
+  grid-template-rows: repeat(2, 1fr);
+  align-items: center;
+  height: var(--touch);
   font-size: max(var(--text-min), 0.78rem);
   color: var(--ink-muted);
-  line-height: var(--touch);
+  line-height: 1;
 }
 
 /* علامة «الآن» تدفع الشريط للأسفل، فيتبعها الوسم ليبقى محاذيًا. */
-.day-row__map--has-now .day-row__map-label {
+.day-row__map--has-now .day-row__map-labels {
+  box-sizing: content-box;
   padding-top: 15px;
 }
 
@@ -545,6 +560,12 @@ button {
   font-size: max(var(--text-min), 0.7em);
 }
 
+.badge--icon-only {
+  justify-content: center;
+  min-width: 25px;
+  padding-inline: 5px;
+}
+
 .counts {
   font-size: max(var(--text-min), 0.8rem);
   color: var(--ink-muted);
@@ -554,6 +575,10 @@ button {
 
 .counts__glyph {
   margin-inline-end: 3px;
+}
+
+.counts__item {
+  white-space: nowrap;
 }
 
 .counts__item--green {
@@ -601,8 +626,20 @@ button {
 /* الخلايا تصف الحالة لقارئة الشاشة؛ المؤشر يُعالَج على مستوى الشريط. */
 .hourbar__cell {
   min-width: 0;
+  display: grid;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 1px;
   border-radius: 1px;
   pointer-events: none;
+  overflow: hidden;
+}
+
+.hourbar__cell--single {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.hourbar__lane {
+  min-height: 0;
 }
 
 /* أنماط مختلفة لكل حالة كي تبقى مميزة في التدرج الرمادي (القسم 21.7). */
@@ -610,11 +647,11 @@ button {
  * ثلاث درجات إضاءة وثلاثة أنماط مختلفة: أخضر سادة فاتح، برتقالي مخطط صاعد،
  * أحمر مخطط هابط وأغمق. الفرق يبقى مقروءًا عند التحويل إلى تدرج رمادي.
  */
-.hourbar__cell--green {
+.hourbar__lane--green {
   background: var(--green-alt);
 }
 
-.hourbar__cell--orange {
+.hourbar__lane--orange {
   background: repeating-linear-gradient(
     45deg,
     var(--orange-base) 0 3px,
@@ -622,7 +659,7 @@ button {
   );
 }
 
-.hourbar__cell--red {
+.hourbar__lane--red {
   background: repeating-linear-gradient(
     -45deg,
     var(--red-base) 0 3px,
@@ -630,7 +667,7 @@ button {
   );
 }
 
-.hourbar__cell--missing {
+.hourbar__lane--missing {
   background: var(--neutral-surface);
   border: 1px dashed var(--neutral-base);
 }
@@ -679,247 +716,6 @@ button {
   color: var(--ink);
   min-height: 1.3em;
   margin-top: 2px;
-}
-
-/* ————— صفحة اليوم ————— */
-
-.day {
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap);
-}
-
-.day__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.day__head h2 {
-  font-size: 1.2rem;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.day__date {
-  font-size: 0.85rem;
-  color: var(--ink-muted);
-}
-
-.day__nav {
-  display: flex;
-  gap: 6px;
-}
-
-.day__nav button {
-  min-height: 44px;
-  padding: 0 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--card);
-}
-
-.day__nav button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.card {
-  background: var(--card);
-  border: 1px solid var(--line-soft);
-  border-radius: var(--radius);
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.card h3 {
-  font-size: 0.95rem;
-}
-
-.now__grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
-}
-
-.now__cell {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 8px;
-  border: 1px solid var(--line-soft);
-  border-radius: 8px;
-  min-width: 0;
-}
-
-.now__cell strong {
-  font-size: 1.25rem;
-}
-
-.now__direction {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.now__note {
-  margin-top: 4px;
-}
-
-.day-summary {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 12px;
-}
-
-.day-summary__block {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  min-width: 0;
-}
-
-.day-summary__row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.day-summary__narrative {
-  font-size: 0.88rem;
-  padding-top: 6px;
-  border-block-start: 1px solid var(--line-soft);
-}
-
-.daymap {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.daymap__line {
-  display: grid;
-  grid-template-columns: 58px minmax(0, 1fr);
-  align-items: start;
-  gap: 8px;
-}
-
-.daymap__label {
-  font-size: 0.82rem;
-  color: var(--ink-muted);
-  padding-top: 4px;
-}
-
-.segments {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.segments__item {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  border-radius: 8px;
-  border: 1px solid var(--line-soft);
-  border-inline-start: 4px solid var(--neutral-base);
-  font-size: 0.86rem;
-}
-
-.segments__item--green {
-  border-inline-start-color: var(--green-base);
-  background: var(--green-surface);
-}
-
-.segments__item--orange {
-  border-inline-start-color: var(--orange-base);
-  background: var(--orange-surface);
-}
-
-.segments__item--red {
-  border-inline-start-color: var(--red-base);
-  background: var(--red-surface);
-}
-
-.segments__time {
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.segments__direction {
-  font-weight: 600;
-}
-
-.segments__reason {
-  color: var(--ink-muted);
-  font-size: 0.82rem;
-}
-
-.sunmoon__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 8px;
-}
-
-.sunmoon__moon {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-/* ————— الجداول والمطويات ————— */
-
-.collapse__toggle,
-.legend__toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  min-height: 44px;
-  padding: 0 4px;
-  border: 0;
-  background: transparent;
-  font-weight: 700;
-  font-size: 0.95rem;
-  color: var(--ink);
-}
-
-.table-wrap {
-  overflow-x: auto;
-}
-
-.hourly {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.8rem;
-  white-space: nowrap;
-}
-
-.hourly th,
-.hourly td {
-  padding: 6px 8px;
-  border-block-end: 1px solid var(--line-soft);
-  text-align: start;
-}
-
-.hourly thead th {
-  position: sticky;
-  top: 0;
-  background: var(--card);
-  color: var(--ink-muted);
-  font-weight: 600;
-}
-
-.hourly__flag {
-  color: var(--ink-muted);
 }
 
 /* ————— مفتاح الألوان ————— */
@@ -1043,19 +839,12 @@ button {
 
 /* ————— الشاشات الواسعة (القسم 19.2) ————— */
 
-@media (min-width: 480px) {
-  .now__grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
 @media (min-width: 720px) {
-  .week-summary {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .now__grid {
-    grid-template-columns: repeat(4, 1fr);
+  .green-outlook__days {
+    grid-auto-flow: initial;
+    grid-auto-columns: initial;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    overflow: visible;
   }
 }
 

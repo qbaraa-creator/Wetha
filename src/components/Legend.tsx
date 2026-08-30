@@ -24,13 +24,13 @@ export function Legend() {
             <h3>لون اتجاه الرياح</h3>
             <ul>
               <li>
-                <SeverityBadge severity="green" label="أخضر" /> شمالية · شمالية غربية
+                <SeverityBadge severity="green" /> شمالية · شمالية غربية
               </li>
               <li>
-                <SeverityBadge severity="orange" label="برتقالي" /> شمالية شرقية · شرقية · غربية
+                <SeverityBadge severity="orange" /> شمالية شرقية · شرقية · غربية
               </li>
               <li>
-                <SeverityBadge severity="red" label="أحمر" /> جنوبية · جنوبية شرقية · جنوبية غربية
+                <SeverityBadge severity="red" /> جنوبية · جنوبية شرقية · جنوبية غربية
               </li>
             </ul>
             <p className="legend__note">
@@ -42,14 +42,14 @@ export function Legend() {
             <h3>عتبات سرعة الرياح</h3>
             <ul>
               <li>
-                <SeverityBadge severity="red" label="أحمر" /> {SPEED_THRESHOLDS.redMaxKmh} كم/س أو أقل
+                <SeverityBadge severity="red" /> {SPEED_THRESHOLDS.redMaxKmh} كم/س أو أقل
               </li>
               <li>
-                <SeverityBadge severity="orange" label="برتقالي" /> أكثر من{' '}
+                <SeverityBadge severity="orange" /> أكثر من{' '}
                 {SPEED_THRESHOLDS.redMaxKmh} وحتى {SPEED_THRESHOLDS.orangeMaxKmh} كم/س
               </li>
               <li>
-                <SeverityBadge severity="green" label="أخضر" /> أكثر من {SPEED_THRESHOLDS.orangeMaxKmh}{' '}
+                <SeverityBadge severity="green" /> أكثر من {SPEED_THRESHOLDS.orangeMaxKmh}{' '}
                 كم/س
               </li>
             </ul>
@@ -59,7 +59,7 @@ export function Legend() {
             <h3>لون شريط الرياح</h3>
             <p className="legend__note">
               يجمع الاتجاه والسرعة ويأخذ الحالة الأسوأ بينهما. مثال: رياح جنوبية غربية بسرعة 40 كم/س
-              تبقى حمراء لأن اتجاهها أحمر.
+              تبقى في الحالة الأشد لأن اتجاهها كذلك.
             </p>
             <p className="legend__note">
               الهبّات تُعرض كرقم مستقل ولا تدخل في حساب اللون في هذا الإصدار.
@@ -70,15 +70,15 @@ export function Legend() {
             <h3>عتبات الرطوبة</h3>
             <ul>
               <li>
-                <SeverityBadge severity="green" label="أخضر" /> أقل من{' '}
+                <SeverityBadge severity="green" /> أقل من{' '}
                 {HUMIDITY_THRESHOLDS.greenMaxExclusive}%
               </li>
               <li>
-                <SeverityBadge severity="orange" label="برتقالي" /> من{' '}
+                <SeverityBadge severity="orange" /> من{' '}
                 {HUMIDITY_THRESHOLDS.greenMaxExclusive}% إلى {HUMIDITY_THRESHOLDS.orangeMaxInclusive}%
               </li>
               <li>
-                <SeverityBadge severity="red" label="أحمر" /> أكثر من{' '}
+                <SeverityBadge severity="red" /> أكثر من{' '}
                 {HUMIDITY_THRESHOLDS.orangeMaxInclusive}%
               </li>
             </ul>

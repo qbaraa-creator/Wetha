@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import App from '../App';
 import { useForecast, type ForecastState } from '../state/useForecast';
 import { TEST_NOW, makeTestForecast } from '../test/forecast';
@@ -23,44 +23,25 @@ function state(overrides: Partial<ForecastState> = {}): ForecastState {
   };
 }
 
-function setHash(hash: string) {
-  window.location.hash = hash;
-  window.dispatchEvent(new HashChangeEvent('hashchange'));
-}
-
-describe('التطبيق والتنقل الرئيسي', () => {
+describe('التطبيق الرئيسي', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(TEST_NOW));
-    window.location.hash = '#/week';
-    vi.mocked(window.scrollTo).mockClear();
-    Object.defineProperty(window.history, 'scrollRestoration', {
-      configurable: true,
-      writable: true,
-      value: 'auto'
-    });
+    window.location.hash = '';
   });
 
   afterEach(() => {
     vi.useRealTimers();
   });
 
-  it('ينقل التركيز إلى main ويعيد التمرير عند فتح يوم والرجوع', () => {
+  it('يعرض صفحة واحدة بلا تبويبات أو مسار يوم مكرر', () => {
+    window.location.hash = '#/day/2026-08-19';
     mockedUseForecast.mockReturnValue(state());
     render(<App />);
 
-    expect(screen.getByRole('main', { name: 'صفحة الأسبوع' })).toBeVisible();
-    act(() => {
-      fireEvent.click(screen.getByRole('button', { name: /الأربعاء.*19\/08\/2026/ }));
-      window.dispatchEvent(new HashChangeEvent('hashchange'));
-    });
-
-    const dayMain = screen.getByRole('main', { name: /صفحة اليوم — الأربعاء 19\/08\/2026/ });
-    expect(dayMain).toHaveFocus();
-    expect(window.scrollTo).toHaveBeenCalledWith(0, 0);
-
-    act(() => setHash('#/week'));
-    expect(screen.getByRole('main', { name: 'صفحة الأسبوع' })).toHaveFocus();
+    expect(screen.getByRole('main', { name: 'توقعات جدة' })).toBeVisible();
+    expect(screen.queryByRole('navigation', { name: 'التنقل الرئيسي' })).not.toBeInTheDocument();
+    expect(screen.queryByText('اليوم المختار')).not.toBeInTheDocument();
   });
 
   it('يعرض التحذير المبسط ولا يسرّب تفاصيل المزود', () => {

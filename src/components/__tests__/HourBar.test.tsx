@@ -12,7 +12,7 @@ const hours = makeFullDay('2026-08-19', {
 });
 
 function renderBar() {
-  render(<HourBar hours={hours} kind="wind" label="شريط اختبار" showAxis />);
+  render(<HourBar hours={hours} label="شريط اختبار" showAxis />);
   return screen.getByRole('listbox', { name: 'شريط اختبار' });
 }
 
@@ -85,9 +85,19 @@ describe('الشريط الساعي', () => {
     expect(track.getAttribute('aria-activedescendant')).toBe(selected);
   });
 
-  it('يبقي 24 option ومحورًا واحدًا عند طلبه', () => {
+  it('يبقي 24 option بطبقتين ومحورًا واحدًا عند طلبه', () => {
     const track = renderBar();
     expect(track.querySelectorAll('[role="option"]')).toHaveLength(24);
+    expect(track.querySelectorAll('.hourbar__lane--wind')).toHaveLength(24);
+    expect(track.querySelectorAll('.hourbar__lane--humidity')).toHaveLength(24);
     expect(document.querySelectorAll('.hourbar__axis')).toHaveLength(1);
+  });
+
+  it('لا يكرر أسماء الألوان في القراءة المرئية', () => {
+    const track = renderBar();
+    fireEvent.keyDown(track, { key: 'Home' });
+    const readout = document.querySelector('.hourbar__readout');
+    expect(readout).toHaveTextContent(/سرعة 20 كم\/س/);
+    expect(readout).not.toHaveTextContent(/أخضر|برتقالي|أحمر/);
   });
 });

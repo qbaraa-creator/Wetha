@@ -4,85 +4,75 @@ import {
   formatDirectionNarrative,
   formatDominantDirection
 } from '../domain/narrative';
+import { findGreenWindows, type GreenWindow } from '../domain/greenWindows';
 import { moonPhaseName } from '../domain/moon';
-import { arabicDayName, formatDateDMY, formatIsoTime, nowInRiyadh } from '../domain/time';
+import { arabicDayName, formatDateDMY, formatHour12, formatIsoTime, nowInRiyadh } from '../domain/time';
 import { getDirectionSeverity } from '../domain/wind';
 import type { DailySummary, NormalizedForecast, WeekRanking } from '../domain/types';
 import { HourBar } from './HourBar';
 import { Legend } from './Legend';
-import { Num } from './Num';
+import { Num, TimeRange } from './Num';
 import { SeverityBadge, SeverityCounts } from './SeverityBadge';
 import { MoonIcon } from './icons';
 
 interface WeekPageProps {
   forecast: NormalizedForecast;
   ranking: WeekRanking;
-  onOpenDay: (date: string) => void;
 }
 
-function summaryDayLabel(days: DailySummary[], date: string | null) {
-  if (!date) return '—';
-  const day = days.find((item) => item.date === date);
-  if (!day) return '—';
+function GreenWindowList({ windows }: { windows: GreenWindow[] }) {
+  if (windows.length === 0) return <span className="green-outlook__none">لا توجد</span>;
   return (
-    <>
-      {arabicDayName(date)} <Num>{formatDateDMY(date)}</Num>
-    </>
+    <span className="green-outlook__windows">
+      {windows.map((window, index) => (
+        <span key={`${window.startHour}-${window.endHourExclusive}`}>
+          {index > 0 ? ' · ' : ''}
+          <TimeRange>
+            {formatHour12(window.startHour)}–{formatHour12(window.endHourExclusive)}
+          </TimeRange>
+        </span>
+      ))}
+    </span>
   );
 }
 
-export function WeekPage({ forecast, ranking, onOpenDay }: WeekPageProps) {
+export function WeekPage({ forecast, ranking }: WeekPageProps) {
   const now = nowInRiyadh();
   const days = forecast.days;
-
-  const greenDay = days.find((day) => day.date === ranking.bestGreenWindDate);
-  // القسم 9.2.ب يختار دائمًا يومًا فائزًا؛ إن كانت ساعاته الخضراء صفرًا فالعنوان مضلل،
-  // فتتحول البطاقة إلى «أقل ساعات حمراء» — وهو بالضبط ما فضّه فض التعادل.
-  const hasGreenWindHours = (greenDay?.windHoursBySeverity.green ?? 0) > 0;
-  const mostHumid = days.find((day) => day.date === ranking.mostHumidDate);
-  const leastHumid = days.find((day) => day.date === ranking.leastHumidDate);
+  const futureDays = days.filter((day) => day.date >= now.dateIso);
+  const outlookDays = (futureDays.length > 0 ? futureDays : days).slice(0, 5);
 
   return (
     <div className="week">
-      <section className="week-summary" aria-label="ملخص الأسبوع">
-        <article className="summary-card">
-          <h2>{hasGreenWindHours ? 'أكثر ساعات رياح خضراء' : 'أقل ساعات رياح حمراء'}</h2>
-          <p className="summary-card__value">{summaryDayLabel(days, ranking.bestGreenWindDate)}</p>
-          <p className="summary-card__detail">
-            {!greenDay ? (
-              '—'
-            ) : hasGreenWindHours ? (
-              <>
-                <Num>{greenDay.windHoursBySeverity.green}</Num> ساعة خضراء
-              </>
-            ) : (
-              <>
-                <Num>{greenDay.windHoursBySeverity.red}</Num> ساعة حمراء — لا توجد ساعات رياح خضراء هذا
-                الأسبوع
-              </>
-            )}
-          </p>
-        </article>
-
-        <article className="summary-card">
-          <h2>الأكثر رطوبة</h2>
-          <p className="summary-card__value">{summaryDayLabel(days, ranking.mostHumidDate)}</p>
-          <p className="summary-card__detail">
-            {mostHumid?.humidityMean !== null && mostHumid
-              ? <>متوسط <Num>{displayNumber(mostHumid.humidityMean)}%</Num></>
-              : '—'}
-          </p>
-        </article>
-
-        <article className="summary-card">
-          <h2>الأقل رطوبة</h2>
-          <p className="summary-card__value">{summaryDayLabel(days, ranking.leastHumidDate)}</p>
-          <p className="summary-card__detail">
-            {leastHumid?.humidityMean !== null && leastHumid
-              ? <>متوسط <Num>{displayNumber(leastHumid.humidityMean)}%</Num></>
-              : '—'}
-          </p>
-        </article>
+      <section className="green-outlook" aria-labelledby="green-outlook-title">
+        <header className="green-outlook__head">
+          <h2 id="green-outlook-title">الساعات المناسبة خلال 5 أيام</h2>
+          <p>الرياح والرطوبة معروضتان كلٌّ على حدة.</p>
+        </header>
+        <div className="green-outlook__days">
+          {outlookDays.map((day) => {
+            const fromHour = day.date === now.dateIso ? now.hour : 0;
+            return (
+              <article className="green-outlook__day" key={day.date}>
+                <h3>
+                  {arabicDayName(day.date)} <Num>{formatDateDMY(day.date)}</Num>
+                </h3>
+                <p>
+                  <span className="green-outlook__metric">
+                    <SeverityBadge severity="green" /> رياح
+                  </span>
+                  <GreenWindowList windows={findGreenWindows(day.hours, 'wind', fromHour)} />
+                </p>
+                <p>
+                  <span className="green-outlook__metric">
+                    <SeverityBadge severity="green" /> رطوبة
+                  </span>
+                  <GreenWindowList windows={findGreenWindows(day.hours, 'humidity', fromHour)} />
+                </p>
+              </article>
+            );
+          })}
+        </div>
       </section>
 
       <div className="week-days">
@@ -94,7 +84,6 @@ export function WeekPage({ forecast, ranking, onOpenDay }: WeekPageProps) {
             nowHour={day.date === now.dateIso ? now.hour + now.minute / 60 : null}
             isMostHumid={day.date === ranking.mostHumidDate}
             isLeastHumid={day.date === ranking.leastHumidDate}
-            onOpen={() => onOpenDay(day.date)}
           />
         ))}
       </div>
@@ -110,10 +99,9 @@ interface DayRowProps {
   nowHour: number | null;
   isMostHumid: boolean;
   isLeastHumid: boolean;
-  onOpen: () => void;
 }
 
-function DayRow({ day, isToday, nowHour, isMostHumid, isLeastHumid, onOpen }: DayRowProps) {
+function DayRow({ day, isToday, nowHour, isMostHumid, isLeastHumid }: DayRowProps) {
   const dominant = formatDominantDirection(day);
   const narrative = formatDirectionNarrative(day.directionSegments);
   const dayName = arabicDayName(day.date);
@@ -123,15 +111,15 @@ function DayRow({ day, isToday, nowHour, isMostHumid, isLeastHumid, onOpen }: Da
   return (
     <article className={`day-row${isToday ? ' day-row--today' : ''}`}>
       <header className="day-row__head">
-        <button type="button" className="day-row__open" onClick={onOpen}>
-          <span className="day-row__name">
+        <div className="day-row__identity">
+          <h2 className="day-row__name">
             {dayName}
             {isToday ? <span className="chip chip--today">اليوم</span> : null}
-          </span>
+          </h2>
           <span className="day-row__date">
             <Num>{dateText}</Num>
           </span>
-        </button>
+        </div>
         <div className="day-row__flags">
           {isMostHumid ? <span className="chip chip--most">الأكثر رطوبة</span> : null}
           {isLeastHumid ? <span className="chip chip--least">الأقل رطوبة</span> : null}
@@ -163,22 +151,15 @@ function DayRow({ day, isToday, nowHour, isMostHumid, isLeastHumid, onOpen }: Da
         </p>
       </div>
 
-      {/* شريطان بمحور زمني واحد: المحور يُرسم مع الشريط الأخير ويخدم الاثنين
-          لأنهما في العمود نفسه وبالعرض نفسه. */}
+      {/* شريط واحد بطبقتين: الأعلى للرياح والأسفل للرطوبة. */}
       <div className={`day-row__map${nowHour !== null ? ' day-row__map--has-now' : ''}`}>
-        <span className="day-row__map-label">رياح</span>
+        <span className="day-row__map-labels" aria-hidden="true">
+          <span>رياح</span>
+          <span>رطوبة</span>
+        </span>
         <HourBar
           hours={day.hours}
-          kind="wind"
-          label={`شريط الرياح الساعي ليوم ${dayName} ${dateText}`}
-          nowHour={nowHour}
-          dimBefore={dimBefore}
-        />
-        <span className="day-row__map-label">رطوبة</span>
-        <HourBar
-          hours={day.hours}
-          kind="humidity"
-          label={`شريط الرطوبة الساعي ليوم ${dayName} ${dateText}`}
+          label={`شريط الرياح والرطوبة الساعي ليوم ${dayName} ${dateText}`}
           nowHour={nowHour}
           dimBefore={dimBefore}
           showAxis

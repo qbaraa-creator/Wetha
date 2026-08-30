@@ -12,9 +12,16 @@ describe('شارات الحالات', () => {
 
   it('تخفي العدادات الصفرية', () => {
     render(<SeverityCounts counts={{ green: 0, orange: 6, red: 0 }} />);
-    expect(screen.getByText(/برتقالي 6س/)).toBeVisible();
+    expect(screen.getByLabelText('برتقالي 6 ساعات')).toBeVisible();
+    expect(screen.getByText('6س')).toBeVisible();
     expect(screen.queryByText(/أخضر/)).not.toBeInTheDocument();
     expect(screen.queryByText(/أحمر/)).not.toBeInTheDocument();
+  });
+
+  it('يعرض رمز الحالة وحده بصريًا حين لا يوجد وصف آخر', () => {
+    render(<SeverityBadge severity="red" />);
+    expect(screen.getByLabelText('الحالة أحمر')).toBeVisible();
+    expect(screen.queryByText('أحمر')).not.toBeInTheDocument();
   });
 
   it('تصف غياب الساعات المصنفة بدل ترك مساحة فارغة', () => {
