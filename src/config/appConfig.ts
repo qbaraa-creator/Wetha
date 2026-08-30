@@ -20,22 +20,19 @@ export type LocationConfig = typeof LOCATION;
 /** عدد أيام التوقع: اليوم + ستة أيام (القسم 1.3). */
 export const FORECAST_DAYS = 7;
 
-/**
- * القسم 5.2 — عتبات السرعة المستمرة بوحدة كم/س.
- * `≤ redMaxKmh` أحمر · `> redMaxKmh و ≤ orangeMaxKmh` برتقالي · `> orangeMaxKmh` أخضر.
- */
+/** عتبات السرعة المستمرة بوحدة كم/س — المجالات نصف مفتوحة لمنع تداخل الحدود. */
 export const SPEED_THRESHOLDS = {
-  redMaxKmh: 15,
-  orangeMaxKmh: 25
+  greenMinKmh: 15,
+  strongMinKmh: 25,
+  severeMinKmh: 35
 } as const;
 
 /**
- * القسم 6.1 — عتبات الرطوبة النسبية.
- * `< greenMaxExclusive` أخضر · `حتى orangeMaxInclusive` برتقالي · `>` أحمر.
+ * عتبات الرطوبة النسبية: أقل من 50 أخضر، 50–أقل من 65 برتقالي، و65 فأكثر أحمر.
  */
 export const HUMIDITY_THRESHOLDS = {
   greenMaxExclusive: 50,
-  orangeMaxInclusive: 70
+  redMinInclusive: 65
 } as const;
 
 /** القسم 5.1 — لون كل قطاع من القطاعات الثمانية. */
@@ -70,15 +67,15 @@ export const REFRESH_POLICY = {
   maxRetries: 1
 } as const;
 
-/** القسم 15.2 — إصدار مخطط التخزين؛ يُزاد عند أي تغيير غير متوافق في النموذج الداخلي. */
-export const STORAGE_SCHEMA_VERSION = 1;
+/** زيد لأن السجل القديم يحمل حالات محسوبة بالعتبات السابقة. */
+export const STORAGE_SCHEMA_VERSION = 2;
 
 /** القسم 18.2 — ألوان الحالات. */
 export const SEVERITY_COLORS: Record<Severity | 'neutral', { base: string; surface: string }> = {
-  green: { base: '#15803D', surface: '#DCFCE7' },
-  orange: { base: '#C2410C', surface: '#FFEDD5' },
-  red: { base: '#B91C1C', surface: '#FEE2E2' },
-  neutral: { base: '#475569', surface: '#F1F5F9' }
+  green: { base: '#287A50', surface: '#E7F5ED' },
+  orange: { base: '#B85C18', surface: '#FFF1E5' },
+  red: { base: '#A93A4A', surface: '#FBEAEC' },
+  neutral: { base: '#627083', surface: '#EEF2F6' }
 };
 
 /** القسم 18.3 — كل لون يصاحبه اسم صريح؛ اللون ليس الوسيلة الوحيدة. */

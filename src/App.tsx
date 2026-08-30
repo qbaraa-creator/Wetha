@@ -5,6 +5,7 @@ import { formatDateDMY, formatHour12, nowInRiyadh } from './domain/time';
 import { useForecast } from './state/useForecast';
 import { Num } from './components/Num';
 import { WeekPage } from './components/WeekPage';
+import { CalendarIcon, ClockIcon, LocationIcon, RefreshIcon } from './components/icons';
 
 /** وقت آخر تحديث بتوقيت الرياض. */
 function formatFetchedAt(fetchedAtIso: string): string {
@@ -27,28 +28,41 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <div className="app-header__main">
-          <h1>{LOCATION.nameAr}</h1>
-          {days.length ? (
-            <p className="app-header__range">
-              <Num>{formatDateDMY(days[0].date)}</Num> — <Num>{formatDateDMY(days[days.length - 1].date)}</Num>
-            </p>
-          ) : null}
+        <div className="app-header__brand">
+          <span className="app-header__location" aria-hidden="true">
+            <LocationIcon size={21} />
+          </span>
+          <div>
+            <p className="app-header__eyebrow">توقعات الرياح والرطوبة</p>
+            <h1>طقس {LOCATION.nameAr}</h1>
+          </div>
         </div>
 
-        <div className="app-header__side">
+        <button
+          type="button"
+          className={`refresh${isRefreshing ? ' refresh--busy' : ''}`}
+          onClick={refresh}
+          disabled={isRefreshing}
+          aria-live="polite"
+        >
+          <RefreshIcon size={17} />
+          <span>{isRefreshing ? 'جارٍ التحديث…' : 'تحديث'}</span>
+        </button>
+
+        <div className="app-header__meta">
+          {days.length ? (
+            <p className="app-header__range">
+              <CalendarIcon size={15} />
+              <span className="sr-only">فترة التوقع:</span>
+              <Num>{formatDateDMY(days[0].date)}</Num>
+              <span aria-hidden="true">–</span>
+              <Num>{formatDateDMY(days[days.length - 1].date)}</Num>
+            </p>
+          ) : null}
           <p className="app-header__updated">
+            <ClockIcon size={15} />
             {forecast ? `آخر تحديث ${formatFetchedAt(forecast.fetchedAtIso)}` : 'لم يتم التحديث بعد'}
           </p>
-          <button
-            type="button"
-            className="refresh"
-            onClick={refresh}
-            disabled={isRefreshing}
-            aria-live="polite"
-          >
-            {isRefreshing ? 'جارٍ التحديث…' : 'تحديث'}
-          </button>
         </div>
       </header>
 

@@ -30,7 +30,7 @@ describe('طبقة المزود — القسم 12', () => {
     const [day] = forecast.days;
     expect(day.hours).toHaveLength(24);
     expect(day.dominantDirection).toBe('NW');
-    expect(day.windSegments[0].severity).toBe('orange');
+    expect(day.windSegments[0].severity).toBe('green');
     expect(day.humiditySegments[0].severity).toBe('red');
     expect(day.gustMaxKmh).toBe(31);
     expect(day.moonPhaseIndex).toBe(2);

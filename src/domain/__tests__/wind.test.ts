@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   degreeToDirection,
+  getCombinedDirectionSeverity,
   getDirectionSeverity,
+  getSpeedBand,
   getSpeedSeverity,
   getWindSeverity,
   normalizeDegrees
@@ -44,21 +46,32 @@ describe('القسم 21.1 — تحويل الدرجات إلى ثمانية ات
     expect(getDirectionSeverity('S')).toBe('red');
     expect(getDirectionSeverity('SW')).toBe('red');
   });
+
+  it('يجمع حالة الاتجاهات المتقلبة ولا يحولها إلى حالة محايدة', () => {
+    expect(getCombinedDirectionSeverity(['NW', 'N'])).toBe('green');
+    expect(getCombinedDirectionSeverity(['N', 'W'])).toBe('orange');
+    expect(getCombinedDirectionSeverity(['NW', 'S'])).toBe('red');
+    expect(getCombinedDirectionSeverity(undefined)).toBeNull();
+  });
 });
 
 describe('القسم 21.2 — السرعة والدمج', () => {
   it('حدود لون السرعة وحدها', () => {
-    expect(getSpeedSeverity(15)).toBe('red');
-    expect(getSpeedSeverity(15.01)).toBe('orange');
-    expect(getSpeedSeverity(25)).toBe('orange');
-    expect(getSpeedSeverity(25.01)).toBe('green');
+    expect(getSpeedBand(14.99)).toBe('low');
+    expect(getSpeedSeverity(14.99)).toBe('red');
+    expect(getSpeedBand(15)).toBe('green');
+    expect(getSpeedSeverity(24.99)).toBe('green');
+    expect(getSpeedBand(25)).toBe('strong');
+    expect(getSpeedSeverity(34.99)).toBe('orange');
+    expect(getSpeedBand(35)).toBe('severe');
+    expect(getSpeedSeverity(35)).toBe('red');
   });
 
   const combined: Array<[DirectionCode, number, string]> = [
-    ['N', 15, 'red'],
-    ['N', 15.01, 'orange'],
+    ['N', 14.99, 'red'],
+    ['N', 15, 'green'],
+    ['NW', 24.99, 'green'],
     ['NW', 25, 'orange'],
-    ['NW', 25.01, 'green'],
     ['E', 30, 'orange'],
     ['NE', 30, 'orange'],
     ['W', 30, 'orange'],
@@ -73,8 +86,8 @@ describe('القسم 21.2 — السرعة والدمج', () => {
 
   it('أمثلة القسم 5.3 الملزمة', () => {
     expect(getWindSeverity('N', 12)).toBe('red');
-    expect(getWindSeverity('NW', 20)).toBe('orange');
-    expect(getWindSeverity('N', 31)).toBe('green');
+    expect(getWindSeverity('NW', 20)).toBe('green');
+    expect(getWindSeverity('N', 31)).toBe('orange');
     expect(getWindSeverity('E', 31)).toBe('orange');
     expect(getWindSeverity('S', 31)).toBe('red');
     expect(getWindSeverity('SE', 18)).toBe('red');

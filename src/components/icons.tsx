@@ -1,6 +1,149 @@
 import { MOON_PHASE_NAMES_AR } from '../domain/moon';
 import { DIRECTION_NAMES_AR } from '../domain/wind';
 import type { DirectionCode } from '../domain/types';
+import type { ReactNode } from 'react';
+
+interface UiIconProps {
+  size?: number;
+  className?: string;
+}
+
+function SvgIcon({
+  size = 18,
+  className,
+  children
+}: UiIconProps & { children: ReactNode }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+      focusable="false"
+    >
+      {children}
+    </svg>
+  );
+}
+
+export function LocationIcon(props: UiIconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" />
+      <circle cx="12" cy="10" r="2.5" />
+    </SvgIcon>
+  );
+}
+
+export function CalendarIcon(props: UiIconProps) {
+  return (
+    <SvgIcon {...props}>
+      <rect x="3" y="5" width="18" height="16" rx="3" />
+      <path d="M8 3v4M16 3v4M3 10h18" />
+    </SvgIcon>
+  );
+}
+
+export function ClockIcon(props: UiIconProps) {
+  return (
+    <SvgIcon {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </SvgIcon>
+  );
+}
+
+export function RefreshIcon(props: UiIconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M20 7v5h-5" />
+      <path d="M4.8 16.5A8 8 0 0 0 20 12M4 12A8 8 0 0 1 19.2 7.5" />
+      <path d="M4 17v-5h5" />
+    </SvgIcon>
+  );
+}
+
+export function WindIcon(props: UiIconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M3 8h11.5a2.5 2.5 0 1 0-2.2-3.7" />
+      <path d="M3 12h15a2.5 2.5 0 1 1-2.2 3.7" />
+      <path d="M3 16h7" />
+    </SvgIcon>
+  );
+}
+
+export function DropletIcon(props: UiIconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M12 3s6 6.2 6 11a6 6 0 0 1-12 0c0-4.8 6-11 6-11Z" />
+      <path d="M9 15.2a3.2 3.2 0 0 0 3 2" />
+    </SvgIcon>
+  );
+}
+
+export function GustIcon(props: UiIconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M3 7h9a2 2 0 1 0-1.7-3" />
+      <path d="M3 11h16" />
+      <path d="m13 14-2 4h3l-1 3 5-6h-3l1-1" />
+    </SvgIcon>
+  );
+}
+
+export function CompassIcon(props: UiIconProps) {
+  return (
+    <SvgIcon {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m15.5 8.5-2 5-5 2 2-5 5-2Z" />
+    </SvgIcon>
+  );
+}
+
+export function SparklesIcon(props: UiIconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="m12 3 1.2 3.8L17 8l-3.8 1.2L12 13l-1.2-3.8L7 8l3.8-1.2L12 3Z" />
+      <path d="m19 14 .7 2.3L22 17l-2.3.7L19 20l-.7-2.3L16 17l2.3-.7L19 14Z" />
+      <path d="m5 13 .7 2.3L8 16l-2.3.7L5 19l-.7-2.3L2 16l2.3-.7L5 13Z" />
+    </SvgIcon>
+  );
+}
+
+export function SunIcon({ setting = false, ...props }: UiIconProps & { setting?: boolean }) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M4 19h16" />
+      <path d={setting ? 'M7 16a5 5 0 0 1 10 0' : 'M7 17a5 5 0 0 1 10 0'} />
+      <path d={setting ? 'M12 3v4M5 9l2 2M19 9l-2 2' : 'M12 4v4M5 10l2 2M19 10l-2 2'} />
+    </SvgIcon>
+  );
+}
+
+export function InfoIcon(props: UiIconProps) {
+  return (
+    <SvgIcon {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v5" />
+      <path d="M12 8h.01" />
+    </SvgIcon>
+  );
+}
+
+export function ChevronIcon(props: UiIconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="m8 10 4 4 4-4" />
+    </SvgIcon>
+  );
+}
 
 /** القسم 7.2 — أيقونة مرحلة القمر؛ الجزء المضيء يمين في التزايد ويسار في التناقص. */
 export function MoonIcon({ index, size = 22 }: { index: number | null; size?: number }) {

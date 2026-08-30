@@ -4,7 +4,7 @@ import { findGreenWindows } from '../greenWindows';
 describe('تلخيص الساعات الخضراء', () => {
   const hours = makeFullDay(
     '2026-08-19',
-    { direction: 'NW', speed: 30, gust: 35, humidity: 40 },
+    { direction: 'NW', speed: 20, gust: 35, humidity: 40 },
     {
       2: { speed: 10 },
       3: { humidity: 60 },
@@ -34,4 +34,3 @@ describe('تلخيص الساعات الخضراء', () => {
     ]);
   });
 });
-

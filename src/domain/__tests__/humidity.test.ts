@@ -5,8 +5,8 @@ describe('القسم 21.3 — عتبات الرطوبة', () => {
   it.each([
     [49.9, 'green'],
     [50, 'orange'],
-    [70, 'orange'],
-    [70.1, 'red'],
+    [64.9, 'orange'],
+    [65, 'red'],
     [0, 'green'],
     [100, 'red']
   ])('%s% ← %s', (value, expected) => {

@@ -29,11 +29,11 @@ describe('القسم 21.4 — التجميع الزمني', () => {
 
   it('الدمج يعيد حساب اللون من الاتجاه الجديد', () => {
     const hours = makeHours('2026-08-19', [
-      { direction: 'NW', speed: 30 },
-      { direction: 'NW', speed: 30 },
-      { direction: 'W', speed: 30 },
-      { direction: 'NW', speed: 30 },
-      { direction: 'NW', speed: 30 }
+      { direction: 'NW', speed: 20 },
+      { direction: 'NW', speed: 20 },
+      { direction: 'W', speed: 20 },
+      { direction: 'NW', speed: 20 },
+      { direction: 'NW', speed: 20 }
     ]);
     expect(hours[2].windSeverity).toBe('orange');
 
@@ -79,26 +79,26 @@ describe('القسم 21.4 — التجميع الزمني', () => {
     expect(segments[1].startHour).toBe(2);
   });
 
-  it('4) اتجاه ثابت N مع 14 و18 و27 ينتج ثلاث فترات أحمر ثم برتقالي ثم أخضر', () => {
+  it('4) اتجاه ثابت N مع 14 و18 و27 ينتج ثلاث فترات أحمر ثم أخضر ثم برتقالي', () => {
     const hours = makeHours('2026-08-19', [
       { direction: 'N', speed: 14 },
       { direction: 'N', speed: 18 },
       { direction: 'N', speed: 27 }
     ]);
     const segments = buildWindSegments(smoothDirectionJitter(hours));
-    expect(segments.map((segment) => segment.severity)).toEqual(['red', 'orange', 'green']);
+    expect(segments.map((segment) => segment.severity)).toEqual(['red', 'green', 'orange']);
   });
 
-  it('5) رطوبة 49 ثم 50 ثم 71 تنتج أخضر ثم برتقالي ثم أحمر', () => {
+  it('5) رطوبة 49 ثم 50 ثم 65 تنتج أخضر ثم برتقالي ثم أحمر', () => {
     const hours = makeHours('2026-08-19', [
       { humidity: 49 },
       { humidity: 50 },
-      { humidity: 71 }
+      { humidity: 65 }
     ]);
     const segments = buildHumiditySegments(hours);
     expect(segments.map((segment) => segment.severity)).toEqual(['green', 'orange', 'red']);
     expect(segments[0].minValue).toBe(49);
-    expect(segments[2].maxValue).toBe(71);
+    expect(segments[2].maxValue).toBe(65);
   });
 
   it('لا تُخفى فترة الرطوبة ذات الساعة الواحدة', () => {

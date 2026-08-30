@@ -7,7 +7,8 @@ export type DirectionCode = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW';
 /** سبب لون الرياح، يُترجم للعرض في src/domain/wind.ts. */
 export type WindReasonCode =
   | 'speed-low'
-  | 'speed-mid'
+  | 'speed-strong'
+  | 'speed-severe'
   | 'direction-red'
   | 'direction-orange'
   | 'direction-and-speed-ok';

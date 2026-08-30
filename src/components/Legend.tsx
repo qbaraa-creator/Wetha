@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { HUMIDITY_THRESHOLDS, SPEED_THRESHOLDS } from '../config/appConfig';
 import { SeverityBadge } from './SeverityBadge';
+import { ChevronIcon, InfoIcon } from './icons';
 
 /** القسم 9.2.د — مفتاح الألوان: يشرح الاتجاه والسرعة والدمج والرطوبة ودور الهبّات. */
 export function Legend() {
@@ -14,8 +15,8 @@ export function Legend() {
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
       >
-        <span id="legend-title">مفتاح الألوان وكيفية القراءة</span>
-        <span aria-hidden="true">{open ? '▲' : '▼'}</span>
+        <span id="legend-title"><InfoIcon size={17} /> مفتاح الألوان وكيفية القراءة</span>
+        <ChevronIcon size={18} />
       </button>
 
       {open ? (
@@ -42,15 +43,18 @@ export function Legend() {
             <h3>عتبات سرعة الرياح</h3>
             <ul>
               <li>
-                <SeverityBadge severity="red" /> {SPEED_THRESHOLDS.redMaxKmh} كم/س أو أقل
+                <SeverityBadge severity="red" /> أقل من {SPEED_THRESHOLDS.greenMinKmh} كم/س
               </li>
               <li>
-                <SeverityBadge severity="orange" /> أكثر من{' '}
-                {SPEED_THRESHOLDS.redMaxKmh} وحتى {SPEED_THRESHOLDS.orangeMaxKmh} كم/س
+                <SeverityBadge severity="green" /> من {SPEED_THRESHOLDS.greenMinKmh} إلى أقل من{' '}
+                {SPEED_THRESHOLDS.strongMinKmh} كم/س
               </li>
               <li>
-                <SeverityBadge severity="green" /> أكثر من {SPEED_THRESHOLDS.orangeMaxKmh}{' '}
-                كم/س
+                <SeverityBadge severity="orange" /> من {SPEED_THRESHOLDS.strongMinKmh} إلى أقل من{' '}
+                {SPEED_THRESHOLDS.severeMinKmh} كم/س · قوية
+              </li>
+              <li>
+                <SeverityBadge severity="red" /> {SPEED_THRESHOLDS.severeMinKmh} كم/س فأكثر · شديدة
               </li>
             </ul>
           </div>
@@ -75,11 +79,11 @@ export function Legend() {
               </li>
               <li>
                 <SeverityBadge severity="orange" /> من{' '}
-                {HUMIDITY_THRESHOLDS.greenMaxExclusive}% إلى {HUMIDITY_THRESHOLDS.orangeMaxInclusive}%
+                {HUMIDITY_THRESHOLDS.greenMaxExclusive}% إلى أقل من{' '}
+                {HUMIDITY_THRESHOLDS.redMinInclusive}%
               </li>
               <li>
-                <SeverityBadge severity="red" /> أكثر من{' '}
-                {HUMIDITY_THRESHOLDS.orangeMaxInclusive}%
+                <SeverityBadge severity="red" /> {HUMIDITY_THRESHOLDS.redMinInclusive}% فأكثر
               </li>
             </ul>
             <p className="legend__note">

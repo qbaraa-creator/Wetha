@@ -16,14 +16,16 @@ describe('صفحة الأسبوع', () => {
     vi.useRealTimers();
   });
 
-  it('يعرض ملخص خمسة أيام لكل من الرياح والرطوبة', () => {
+  it('يعرض أفضل أوقات اليوم والأيام السبعة وفق المعايير الثلاثة', () => {
     const forecast = makeTestForecast();
     render(<WeekPage forecast={forecast} ranking={rankWeek(forecast.days)} />);
 
-    const outlook = screen.getByRole('region', { name: 'الساعات المناسبة خلال 5 أيام' });
-    expect(within(outlook).getAllByRole('article')).toHaveLength(5);
-    expect(within(outlook).getAllByText('رياح')).toHaveLength(5);
-    expect(within(outlook).getAllByText('رطوبة')).toHaveLength(5);
+    const outlook = screen.getByRole('region', { name: 'أفضل أوقات الأنشطة الخارجية' });
+    expect(within(outlook).getAllByRole('article')).toHaveLength(7);
+    expect(within(outlook).getByText('أفضل الأوقات المتبقية اليوم')).toBeVisible();
+    expect(within(outlook).getByText('شمالية أو شمالية غربية')).toBeVisible();
+    expect(within(outlook).getByText('سرعة 15–أقل من 25 كم/س')).toBeVisible();
+    expect(within(outlook).getByText('رطوبة أقل من 50%')).toBeVisible();
   });
 
   it('يعرض شريطًا مركبًا ومحورًا واحدًا فقط لكل يوم وتفاصيل مطوية افتراضيًا', () => {
@@ -51,16 +53,48 @@ describe('صفحة الأسبوع', () => {
     expect(screen.getAllByText('ساعات الرياح')[0]).toBeInTheDocument();
   });
 
-  it('يجمع الساعات الخضراء المتتالية في الملخص ويستبعد الماضي من اليوم', () => {
+  it('يجمع ساعات النشاط المتزامنة ويستبعد الماضي من اليوم', () => {
     const forecast = makeTestForecast();
+    forecast.days[0].hours.forEach((hour) => {
+      hour.direction = 'W';
+      hour.windSpeedKmh = 20;
+      hour.humidity = 60;
+    });
     for (const hour of [13, 14]) {
-      forecast.days[0].hours[hour].windSeverity = 'green';
-      forecast.days[0].hours[hour].humiditySeverity = 'green';
+      forecast.days[0].hours[hour].direction = 'NW';
+      forecast.days[0].hours[hour].windSpeedKmh = 20;
+      forecast.days[0].hours[hour].humidity = 40;
     }
     render(<WeekPage forecast={forecast} ranking={rankWeek(forecast.days)} />);
 
     const firstDay = screen.getByRole('heading', { name: /الأربعاء 19\/08\/2026/ }).closest('article');
     expect(firstDay).not.toBeNull();
-    expect(within(firstDay!).getAllByText('1:00 م–3:00 م')).toHaveLength(2);
+    expect(within(firstDay!).getByText('1:00 م–3:00 م')).toBeVisible();
+    expect(screen.getByRole('region', { name: 'أفضل الأوقات المتبقية اليوم' })).toHaveTextContent(
+      '1:00 م–3:00 م'
+    );
+  });
+
+  it('يعرض الاتجاه المتقلب بالأخضر عندما يكون الاتجاهان أخضرين', () => {
+    const forecast = makeTestForecast();
+    forecast.days[0].dominantDirection = null;
+    forecast.days[0].variableDirections = ['NW', 'N'];
+    render(<WeekPage forecast={forecast} ranking={rankWeek(forecast.days)} />);
+
+    expect(
+      screen.getByLabelText('متقلبة · شمالية غربية / شمالية، الحالة أخضر')
+    ).toBeVisible();
+  });
+
+  it('لا يعرض نقطة خضراء عندما لا توجد فترة تحقق المعايير الثلاثة', () => {
+    const forecast = makeTestForecast();
+    forecast.days[0].hours.forEach((hour) => {
+      hour.direction = 'W';
+    });
+    render(<WeekPage forecast={forecast} ranking={rankWeek(forecast.days)} />);
+
+    const firstDay = screen.getByRole('heading', { name: /الأربعاء 19\/08\/2026/ }).closest('article');
+    expect(within(firstDay!).getByText('لا توجد فترة تحقق المعايير')).toBeVisible();
+    expect(within(firstDay!).queryByLabelText('الحالة أخضر')).not.toBeInTheDocument();
   });
 });

@@ -62,12 +62,12 @@ describe('القسم 9.2.ب — أكثر ساعات رياح خضراء', () => 
   it('يختار اليوم الأكثر ساعات خضراء', () => {
     const green = buildDailySummary(
       '2026-08-19',
-      makeFullDay('2026-08-19', { direction: 'NW', speed: 30, humidity: 50 }),
+      makeFullDay('2026-08-19', { direction: 'NW', speed: 20, humidity: 50 }),
       noAstronomy
     );
     const orange = buildDailySummary(
       '2026-08-20',
-      makeFullDay('2026-08-20', { direction: 'NW', speed: 20, humidity: 50 }),
+      makeFullDay('2026-08-20', { direction: 'NW', speed: 30, humidity: 50 }),
       noAstronomy
     );
     expect(rankBestGreenWindDay([orange, green])).toBe('2026-08-19');
@@ -81,7 +81,7 @@ describe('القسم 9.2.ب — أكثر ساعات رياح خضراء', () => 
     );
     const b = buildDailySummary(
       '2026-08-20',
-      makeFullDay('2026-08-20', { direction: 'NW', speed: 20 }),
+      makeFullDay('2026-08-20', { direction: 'NW', speed: 20 }, { 0: { direction: 'W', speed: 20 }, 1: { direction: 'W', speed: 20 } }),
       noAstronomy
     );
     expect(a.windHoursBySeverity.green).toBe(b.windHoursBySeverity.green);

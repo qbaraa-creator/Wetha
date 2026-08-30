@@ -31,11 +31,36 @@ export function getDirectionSeverity(direction: DirectionCode): Severity {
   return DIRECTION_SEVERITY[direction];
 }
 
-/** القسم 5.2 — لون السرعة وحدها. */
+/**
+ * حالة وصف يضم أكثر من اتجاه — مثل «متقلبة · شمالية غربية / شمالية».
+ * نأخذ الحالة الأشد بين الاتجاهات؛ فإذا كانا أخضرين تبقى الشارة خضراء،
+ * ولا تصبح محايدة لمجرد غياب اتجاه سائد واحد.
+ */
+export function getCombinedDirectionSeverity(
+  directions: DirectionCode[] | undefined
+): Severity | null {
+  if (!directions?.length) return null;
+  return directions
+    .map(getDirectionSeverity)
+    .reduce((combined, severity) => worseSeverity(combined, severity));
+}
+
+export type WindSpeedBand = 'low' | 'green' | 'strong' | 'severe';
+
+/** النطاق الوصفي للسرعة؛ يبقي «منخفضة» و«شديدة» منفصلتين رغم أن لونهما أحمر. */
+export function getSpeedBand(speedKmh: number): WindSpeedBand {
+  if (speedKmh < SPEED_THRESHOLDS.greenMinKmh) return 'low';
+  if (speedKmh < SPEED_THRESHOLDS.strongMinKmh) return 'green';
+  if (speedKmh < SPEED_THRESHOLDS.severeMinKmh) return 'strong';
+  return 'severe';
+}
+
+/** لون السرعة وحدها: منخفضة/شديدة أحمر، المناسبة أخضر، والقوية برتقالي. */
 export function getSpeedSeverity(speedKmh: number): Severity {
-  if (speedKmh <= SPEED_THRESHOLDS.redMaxKmh) return 'red';
-  if (speedKmh <= SPEED_THRESHOLDS.orangeMaxKmh) return 'orange';
-  return 'green';
+  const band = getSpeedBand(speedKmh);
+  if (band === 'green') return 'green';
+  if (band === 'strong') return 'orange';
+  return 'red';
 }
 
 /** القسم 5.3 — حالة الرياح المركبة = الأسوأ بين لون الاتجاه ولون السرعة. */
@@ -45,15 +70,18 @@ export function getWindSeverity(direction: DirectionCode, speedKmh: number): Sev
 
 /** سبب اللون بلغة قصيرة (القسم 5.7). */
 export function getWindReasonCode(direction: DirectionCode, speedKmh: number): WindReasonCode {
+  const speedBand = getSpeedBand(speedKmh);
   const speedSeverity = getSpeedSeverity(speedKmh);
   const directionSeverity = getDirectionSeverity(direction);
   const final = worseSeverity(directionSeverity, speedSeverity);
 
   if (final === 'red') {
-    return speedSeverity === 'red' ? 'speed-low' : 'direction-red';
+    if (speedBand === 'low') return 'speed-low';
+    if (speedBand === 'severe') return 'speed-severe';
+    return 'direction-red';
   }
   if (final === 'orange') {
-    return speedSeverity === 'orange' ? 'speed-mid' : 'direction-orange';
+    return speedBand === 'strong' ? 'speed-strong' : 'direction-orange';
   }
   return 'direction-and-speed-ok';
 }
@@ -61,9 +89,11 @@ export function getWindReasonCode(direction: DirectionCode, speedKmh: number): W
 export function describeWindReason(code: WindReasonCode, direction?: DirectionCode): string {
   switch (code) {
     case 'speed-low':
-      return `السرعة ${SPEED_THRESHOLDS.redMaxKmh} كم/س أو أقل`;
-    case 'speed-mid':
-      return `السرعة بين ${SPEED_THRESHOLDS.redMaxKmh} و${SPEED_THRESHOLDS.orangeMaxKmh}`;
+      return `السرعة أقل من ${SPEED_THRESHOLDS.greenMinKmh} كم/س`;
+    case 'speed-strong':
+      return `رياح قوية من ${SPEED_THRESHOLDS.strongMinKmh} إلى أقل من ${SPEED_THRESHOLDS.severeMinKmh} كم/س`;
+    case 'speed-severe':
+      return `رياح شديدة ${SPEED_THRESHOLDS.severeMinKmh} كم/س فأكثر`;
     case 'direction-red':
       return direction ? `اتجاه ${DIRECTION_NAMES_AR[direction]}` : 'اتجاه غير مناسب';
     case 'direction-orange':
