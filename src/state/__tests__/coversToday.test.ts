@@ -4,11 +4,7 @@ import { fixture } from '../../providers/__tests__/openMeteoFixture';
 import { normalizeOpenMeteoResponse } from '../../providers/openMeteo';
 import { LOCATION } from '../../config/appConfig';
 
-const forecast = normalizeOpenMeteoResponse(
-  fixture(),
-  LOCATION,
-  '2026-08-19T03:05:00.000Z'
-);
+const forecast = normalizeOpenMeteoResponse(fixture(), LOCATION, '2026-08-19T03:05:00.000Z');
 
 /** التجهيزة تغطي 19–25 أغسطس 2026 بتوقيت الرياض. */
 function pretendNow(utcIso: string) {

@@ -17,6 +17,12 @@ const serviceWorker = await readFile(path.join(distDir, 'sw.js'), 'utf8');
 assert.match(indexHtml, /rel="manifest"/, 'صفحة الإنتاج لا تربط Manifest.');
 assert.match(indexHtml, /registerSW\.js/, 'صفحة الإنتاج لا تسجل Service Worker.');
 assert.match(indexHtml, /Content-Security-Policy/, 'سياسة CSP غير موجودة في صفحة الإنتاج.');
+assert.match(
+  indexHtml,
+  /worker-src 'self';/,
+  'سياسة عامل الإنتاج يجب أن تبقى محصورة في نفس الأصل.'
+);
+assert.doesNotMatch(indexHtml, /worker-src[^;"]*blob:/, 'سماح عامل HMR تسرّب إلى نسخة الإنتاج.');
 assert.doesNotMatch(indexHtml, /\/src\/main\.tsx/, 'صفحة الإنتاج ما زالت تشير إلى مصدر التطوير.');
 
 assert.equal(manifest.lang, 'ar');
@@ -37,7 +43,11 @@ assert.deepEqual([...requiredIcons], [], `أيقونات PWA ناقصة: ${[...r
 assert.match(serviceWorker, /precacheAndRoute/, 'Service Worker لا يسبق تحميل القشرة.');
 assert.match(serviceWorker, /NavigationRoute/, 'Navigation fallback غير موجود.');
 assert.match(serviceWorker, /index\.html/, 'index.html غير موجود في مسار الرجوع.');
-assert.match(serviceWorker, /api\\?\.open-meteo\\?\.com/, 'مسار Open-Meteo غير موجود في Service Worker.');
+assert.match(
+  serviceWorker,
+  /api\\?\.open-meteo\\?\.com/,
+  'مسار Open-Meteo غير موجود في Service Worker.'
+);
 assert.match(serviceWorker, /NetworkOnly/, 'طلب Open-Meteo لا يستخدم NetworkOnly.');
 
 const base = process.env.VITE_BASE_PATH ?? './';

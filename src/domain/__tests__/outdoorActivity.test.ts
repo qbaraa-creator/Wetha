@@ -4,16 +4,13 @@ import { makeHours } from './testHelpers';
 
 describe('فترات الأنشطة الخارجية', () => {
   it('لا يقبل الساعة إلا باجتماع الاتجاه والسرعة والرطوبة المناسبة', () => {
-    const [suitable, wrongDirection, lowSpeed, strongWind, highHumidity] = makeHours(
-      '2026-08-19',
-      [
-        { direction: 'NW', speed: 20, humidity: 45 },
-        { direction: 'W', speed: 20, humidity: 45 },
-        { direction: 'N', speed: 14.9, humidity: 45 },
-        { direction: 'N', speed: 25, humidity: 45 },
-        { direction: 'N', speed: 20, humidity: 50 }
-      ]
-    );
+    const [suitable, wrongDirection, lowSpeed, strongWind, highHumidity] = makeHours('2026-08-19', [
+      { direction: 'NW', speed: 20, humidity: 45 },
+      { direction: 'W', speed: 20, humidity: 45 },
+      { direction: 'N', speed: 14.9, humidity: 45 },
+      { direction: 'N', speed: 25, humidity: 45 },
+      { direction: 'N', speed: 20, humidity: 50 }
+    ]);
 
     expect(isOutdoorActivityHour(suitable)).toBe(true);
     expect(isOutdoorActivityHour(wrongDirection)).toBe(false);
@@ -54,8 +51,6 @@ describe('فترات الأنشطة الخارجية', () => {
       '2026-08-19',
       Array.from({ length: 6 }, () => ({ direction: 'N' as const, speed: 20, humidity: 40 }))
     );
-    expect(findOutdoorActivityWindows(hours, 3)).toEqual([
-      { startHour: 3, endHourExclusive: 6 }
-    ]);
+    expect(findOutdoorActivityWindows(hours, 3)).toEqual([{ startHour: 3, endHourExclusive: 6 }]);
   });
 });

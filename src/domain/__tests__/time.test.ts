@@ -6,6 +6,7 @@ import {
   formatDayLength,
   formatHour12,
   formatIsoTime,
+  msUntilNextHour,
   nowInRiyadh
 } from '../time';
 import { moonPhaseIndex, moonPhaseName } from '../moon';
@@ -41,6 +42,11 @@ describe('القسم 21.6 — الوقت', () => {
   it('ينتقل بين الأيام عبر حدود الشهر', () => {
     expect(addDays('2026-08-31', 1)).toBe('2026-09-01');
     expect(addDays('2026-09-01', -1)).toBe('2026-08-31');
+  });
+
+  it('يحسب المدة حتى رأس الساعة التالية بلا انجراف', () => {
+    expect(msUntilNextHour(new Date('2026-08-19T09:45:30.500Z'))).toBe(869_500);
+    expect(msUntilNextHour(new Date('2026-08-19T10:00:00.000Z'))).toBe(3_600_000);
   });
 });
 

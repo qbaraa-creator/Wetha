@@ -1,3 +1,4 @@
+import type { KeyboardEvent } from 'react';
 import {
   displayNumber,
   displayRange,
@@ -5,11 +6,14 @@ import {
   formatDominantDirection
 } from '../domain/narrative';
 import { moonPhaseName } from '../domain/moon';
+import { findOutdoorActivityWindows, type ActivityWindow } from '../domain/outdoorActivity';
 import {
-  findOutdoorActivityWindows,
-  type ActivityWindow
-} from '../domain/outdoorActivity';
-import { arabicDayName, formatDateDMY, formatHour12, formatIsoTime, nowInRiyadh } from '../domain/time';
+  arabicDayName,
+  formatDateDMY,
+  formatHour12,
+  formatIsoTime,
+  type RiyadhNow
+} from '../domain/time';
 import { getCombinedDirectionSeverity } from '../domain/wind';
 import type { DailySummary, NormalizedForecast, WeekRanking } from '../domain/types';
 import { HourBar } from './HourBar';
@@ -31,6 +35,46 @@ import {
 interface WeekPageProps {
   forecast: NormalizedForecast;
   ranking: WeekRanking;
+  now: RiyadhNow;
+}
+
+/** لا يكفي Tab وحده مع scroll-snap في كل المتصفحات؛ الأسهم تنقل بطاقة كاملة. */
+function scrollDaysWithKeyboard(event: KeyboardEvent<HTMLDivElement>): void {
+  const track = event.currentTarget;
+  if (
+    event.target !== track ||
+    event.altKey ||
+    event.ctrlKey ||
+    event.metaKey ||
+    track.scrollWidth <= track.clientWidth
+  )
+    return;
+
+  const style = getComputedStyle(track);
+  const cardWidth =
+    track.querySelector('article')?.getBoundingClientRect().width ?? track.clientWidth;
+  const step = cardWidth + (parseFloat(style.columnGap) || 0);
+
+  switch (event.key) {
+    case 'ArrowLeft':
+      track.scrollBy({ left: -step, behavior: 'auto' });
+      break;
+    case 'ArrowRight':
+      track.scrollBy({ left: step, behavior: 'auto' });
+      break;
+    case 'Home':
+      track.scrollTo({ left: 0, behavior: 'auto' });
+      break;
+    case 'End':
+      track.scrollTo({
+        left: (track.scrollWidth - track.clientWidth) * (style.direction === 'rtl' ? -1 : 1),
+        behavior: 'auto'
+      });
+      break;
+    default:
+      return;
+  }
+  event.preventDefault();
 }
 
 function ActivityWindowList({
@@ -66,24 +110,27 @@ function ActivityWindowList({
         <Num>{totalHours}س</Num>
       </span>
       <span className="green-outlook__windows">
-      {windows.map((window) => (
-        <span className="green-outlook__window" key={`${window.startHour}-${window.endHourExclusive}`}>
-          <TimeRange>
-            {formatHour12(window.startHour)}–{formatHour12(window.endHourExclusive)}
-          </TimeRange>
-        </span>
-      ))}
+        {windows.map((window) => (
+          <span
+            className="green-outlook__window"
+            key={`${window.startHour}-${window.endHourExclusive}`}
+          >
+            <TimeRange>
+              {formatHour12(window.startHour)}–{formatHour12(window.endHourExclusive)}
+            </TimeRange>
+          </span>
+        ))}
       </span>
     </span>
   );
 }
 
-export function WeekPage({ forecast, ranking }: WeekPageProps) {
-  const now = nowInRiyadh();
+export function WeekPage({ forecast, ranking, now }: WeekPageProps) {
   const days = forecast.days;
   const futureDays = days.filter((day) => day.date >= now.dateIso);
   const outlookDays = (futureDays.length > 0 ? futureDays : days).slice(0, 7);
   const today = days.find((day) => day.date === now.dateIso) ?? null;
+  const followingDays = today ? outlookDays.filter((day) => day.date !== today.date) : outlookDays;
   const todayWindows = today ? findOutdoorActivityWindows(today.hours, now.hour) : [];
 
   return (
@@ -100,9 +147,15 @@ export function WeekPage({ forecast, ranking }: WeekPageProps) {
         </header>
 
         <div className="green-outlook__criteria" aria-label="معايير الوقت المناسب">
-          <span><CompassIcon size={16} /> شمالية أو شمالية غربية</span>
-          <span><WindIcon size={16} /> سرعة 15–أقل من 25 كم/س</span>
-          <span><DropletIcon size={16} /> رطوبة أقل من 50%</span>
+          <span>
+            <CompassIcon size={16} /> شمالية أو شمالية غربية
+          </span>
+          <span>
+            <WindIcon size={16} /> سرعة 15–أقل من 25 كم/س
+          </span>
+          <span>
+            <DropletIcon size={16} /> رطوبة أقل من 50%
+          </span>
         </div>
 
         <section className="green-outlook__today" aria-labelledby="today-activity-title">
@@ -112,29 +165,41 @@ export function WeekPage({ forecast, ranking }: WeekPageProps) {
             {today ? <Num>{formatDateDMY(today.date)}</Num> : null}
           </div>
           {today ? (
-            <ActivityWindowList windows={todayWindows} emptyText="لا توجد فترة مناسبة متبقية اليوم" />
+            <ActivityWindowList
+              windows={todayWindows}
+              emptyText="لا توجد فترة مناسبة متبقية اليوم"
+            />
           ) : (
             <span className="green-outlook__none">بيانات اليوم غير متاحة</span>
           )}
         </section>
 
         <div className="green-outlook__week-title">
-          <h3>نظرة الأيام السبعة</h3>
+          <h3>الأيام التالية</h3>
           <span>تتحقق الشروط الثلاثة في الوقت نفسه</span>
         </div>
-        <div className="green-outlook__days">
-          {outlookDays.map((day) => {
-            const fromHour = day.date === now.dateIso ? now.hour : 0;
+        <p id="outlook-keyboard-help" className="sr-only">
+          استخدم السهمين الأيمن والأيسر للتمرير بين الأيام، وHome وEnd لأول يوم وآخر يوم.
+        </p>
+        {/* حاوية تمرير أصلية: محطة تركيز واحدة لازمة لقراءة البطاقات خارج العرض. */}
+        {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Keyboard scrolling, not a button or selection widget. */}
+        <div
+          className="green-outlook__days"
+          // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- Native keyboard scrolling needs a focusable container.
+          tabIndex={0}
+          role="group"
+          aria-label="توقعات الأنشطة للأيام التالية"
+          aria-describedby="outlook-keyboard-help"
+          onKeyDown={scrollDaysWithKeyboard}
+        >
+          {followingDays.map((day) => {
             return (
-              <article
-                className={`green-outlook__day${day.date === now.dateIso ? ' green-outlook__day--today' : ''}`}
-                key={day.date}
-              >
-                <h3 aria-label={`${arabicDayName(day.date)} ${formatDateDMY(day.date)}`}>
+              <article className="green-outlook__day" key={day.date}>
+                <h4 aria-label={`${arabicDayName(day.date)} ${formatDateDMY(day.date)}`}>
                   <span>{arabicDayName(day.date)}</span>
                   <Num>{formatDateDMY(day.date)}</Num>
-                </h3>
-                <ActivityWindowList windows={findOutdoorActivityWindows(day.hours, fromHour)} />
+                </h4>
+                <ActivityWindowList windows={findOutdoorActivityWindows(day.hours, 0)} />
               </article>
             );
           })}
@@ -183,7 +248,12 @@ function DayRow({ day, isToday, nowHour, isMostHumid, isLeastHumid }: DayRowProp
         <div className="day-row__identity">
           <h2 className="day-row__name">
             {dayName}
-            {isToday ? <span className="chip chip--today">اليوم</span> : null}
+            {isToday ? (
+              <>
+                {' '}
+                <span className="chip chip--today">اليوم</span>
+              </>
+            ) : null}
           </h2>
           <span className="day-row__date">
             <Num>{dateText}</Num>
@@ -210,19 +280,29 @@ function DayRow({ day, isToday, nowHour, isMostHumid, isLeastHumid }: DayRowProp
 
         <dl className="day-row__stats">
           <div className="day-row__stat">
-            <dt><WindIcon size={16} /> السرعة</dt>
-            <dd><Num>{displayRange(day.windMinKmh, day.windMaxKmh)}</Num> <small>كم/س</small></dd>
+            <dt>
+              <WindIcon size={16} /> السرعة
+            </dt>
+            <dd>
+              <Num>{displayRange(day.windMinKmh, day.windMaxKmh)}</Num> <small>كم/س</small>
+            </dd>
           </div>
           <div className="day-row__stat">
-            <dt><GustIcon size={16} /> أعلى هبّة</dt>
+            <dt>
+              <GustIcon size={16} /> أعلى هبّة
+            </dt>
             <dd>
               <Num>{displayNumber(day.gustMaxKmh)}</Num> <small>كم/س</small>
               {day.gustMaxTimeIso ? <small> · {formatIsoTime(day.gustMaxTimeIso)}</small> : null}
             </dd>
           </div>
           <div className="day-row__stat">
-            <dt><DropletIcon size={16} /> متوسط الرطوبة</dt>
-            <dd><Num>{displayNumber(day.humidityMean)}%</Num></dd>
+            <dt>
+              <DropletIcon size={16} /> متوسط الرطوبة
+            </dt>
+            <dd>
+              <Num>{displayNumber(day.humidityMean)}%</Num>
+            </dd>
           </div>
         </dl>
       </div>
@@ -230,8 +310,12 @@ function DayRow({ day, isToday, nowHour, isMostHumid, isLeastHumid }: DayRowProp
       {/* شريط واحد بطبقتين: الأعلى للرياح والأسفل للرطوبة. */}
       <div className={`day-row__map${nowHour !== null ? ' day-row__map--has-now' : ''}`}>
         <div className="day-row__map-head" aria-hidden="true">
-          <span><WindIcon size={15} /> رياح <i className="lane-mark lane-mark--wind" /></span>
-          <span><DropletIcon size={15} /> رطوبة <i className="lane-mark lane-mark--humidity" /></span>
+          <span>
+            <WindIcon size={15} /> رياح <i className="lane-mark lane-mark--wind" />
+          </span>
+          <span>
+            <DropletIcon size={15} /> رطوبة <i className="lane-mark lane-mark--humidity" />
+          </span>
           <small>اسحب على الشريط لقراءة الساعة</small>
         </div>
         <HourBar
@@ -245,18 +329,24 @@ function DayRow({ day, isToday, nowHour, isMostHumid, isLeastHumid }: DayRowProp
 
       <details className="day-row__details">
         <summary>
-          <span><InfoIcon size={16} /> تفاصيل {dayName}</span>
+          <span>
+            <InfoIcon size={16} /> تفاصيل {dayName}
+          </span>
           <ChevronIcon size={18} />
         </summary>
         <div className="day-row__details-body">
           <div className="day-row__detail-group">
-            <h3><WindIcon size={16} /> ساعات الرياح</h3>
+            <h3>
+              <WindIcon size={16} /> ساعات الرياح
+            </h3>
             <SeverityCounts counts={day.windHoursBySeverity} />
-            <p className="day-row__narrative">{narrative.text}</p>
+            <p className="day-row__narrative">{narrative}</p>
           </div>
 
           <div className="day-row__detail-group">
-            <h3><DropletIcon size={16} /> ساعات الرطوبة</h3>
+            <h3>
+              <DropletIcon size={16} /> ساعات الرطوبة
+            </h3>
             <SeverityCounts counts={day.humidityHoursBySeverity} />
             <p>
               أدنى <Num>{displayNumber(day.humidityMin)}%</Num> · متوسط{' '}
@@ -266,12 +356,16 @@ function DayRow({ day, isToday, nowHour, isMostHumid, isLeastHumid }: DayRowProp
           </div>
 
           <div className="day-row__detail-group day-row__astro">
-            <h3><SunIcon size={16} /> الشمس والقمر</h3>
+            <h3>
+              <SunIcon size={16} /> الشمس والقمر
+            </h3>
             <p>
-              <SunIcon size={16} /> <span className="label">الشروق</span> {formatIsoTime(day.sunriseIso)}
+              <SunIcon size={16} /> <span className="label">الشروق</span>{' '}
+              {formatIsoTime(day.sunriseIso)}
             </p>
             <p>
-              <SunIcon size={16} setting /> <span className="label">الغروب</span> {formatIsoTime(day.sunsetIso)}
+              <SunIcon size={16} setting /> <span className="label">الغروب</span>{' '}
+              {formatIsoTime(day.sunsetIso)}
             </p>
             <p className="day-row__moon">
               <MoonIcon index={day.moonPhaseIndex} />

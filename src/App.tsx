@@ -3,6 +3,7 @@ import { DATA_ATTRIBUTION, LOCATION } from './config/appConfig';
 import { rankWeek } from './domain/ranking';
 import { formatDateDMY, formatHour12, nowInRiyadh } from './domain/time';
 import { useForecast } from './state/useForecast';
+import { useRiyadhClock } from './state/useRiyadhClock';
 import { Num } from './components/Num';
 import { WeekPage } from './components/WeekPage';
 import { CalendarIcon, ClockIcon, LocationIcon, RefreshIcon } from './components/icons';
@@ -15,15 +16,18 @@ function formatFetchedAt(fetchedAtIso: string): string {
 
 export default function App() {
   const { status, forecast, source, isRefreshing, errorMessage, refresh } = useForecast();
+  const now = useRiyadhClock();
 
   const ranking = useMemo(
-    () => (forecast ? rankWeek(forecast.days) : { mostHumidDate: null, leastHumidDate: null, bestGreenWindDate: null }),
+    () =>
+      forecast
+        ? rankWeek(forecast.days)
+        : { mostHumidDate: null, leastHumidDate: null, bestGreenWindDate: null },
     [forecast]
   );
 
   const days = forecast?.days ?? [];
-  const today = nowInRiyadh().dateIso;
-  const hasToday = days.some((day) => day.date === today);
+  const hasToday = days.some((day) => day.date === now.dateIso);
 
   return (
     <div className="app">
@@ -61,7 +65,9 @@ export default function App() {
           ) : null}
           <p className="app-header__updated">
             <ClockIcon size={15} />
-            {forecast ? `آخر تحديث ${formatFetchedAt(forecast.fetchedAtIso)}` : 'لم يتم التحديث بعد'}
+            {forecast
+              ? `آخر تحديث ${formatFetchedAt(forecast.fetchedAtIso)}`
+              : 'لم يتم التحديث بعد'}
           </p>
         </div>
       </header>
@@ -104,7 +110,9 @@ export default function App() {
           </section>
         ) : null}
 
-        {status === 'ready' && forecast ? <WeekPage forecast={forecast} ranking={ranking} /> : null}
+        {status === 'ready' && forecast ? (
+          <WeekPage forecast={forecast} ranking={ranking} now={now} />
+        ) : null}
       </main>
 
       <footer className="app-footer">
@@ -113,9 +121,7 @@ export default function App() {
             {DATA_ATTRIBUTION.label}
           </a>
         </p>
-        <p className="muted">
-          القيم توقعات نموذجية بتوقيت الرياض، وليست قياسات محطة محلية لحظية.
-        </p>
+        <p className="muted">القيم توقعات نموذجية بتوقيت الرياض، وليست قياسات محطة محلية لحظية.</p>
       </footer>
     </div>
   );

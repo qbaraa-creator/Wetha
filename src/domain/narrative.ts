@@ -7,22 +7,15 @@ import type { DirectionCode, DirectionSegment } from './types';
  * مثال: «شمالية غربية من 12:00 ص إلى 11:00 ص، ثم غربية من 11:00 ص إلى 6:00 م،
  * ثم شمالية غربية حتى نهاية اليوم.»
  */
-export function formatDirectionNarrative(
-  segments: DirectionSegment[],
-  options: { maxSegments?: number } = {}
-): { text: string; hiddenCount: number } {
-  if (segments.length === 0) return { text: '—', hiddenCount: 0 };
+export function formatDirectionNarrative(segments: DirectionSegment[]): string {
+  if (segments.length === 0) return '—';
 
-  const limit = options.maxSegments ?? segments.length;
-  const shown = segments.slice(0, limit);
-  const hiddenCount = segments.length - shown.length;
-
-  const parts = shown.map((segment, index) => {
+  const parts = segments.map((segment, index) => {
     const name = DIRECTION_NAMES_AR[segment.direction];
-    const isLastOfDay = hiddenCount === 0 && index === shown.length - 1 && segment.endHourExclusive >= 24;
+    const isLastOfDay = index === segments.length - 1 && segment.endHourExclusive >= 24;
     const prefix = index === 0 ? '' : 'ثم ';
 
-    if (isLastOfDay && shown.length > 1) {
+    if (isLastOfDay && segments.length > 1) {
       return `${prefix}${name} حتى نهاية اليوم`;
     }
     return `${prefix}${name} من ${formatHour12(segment.startHour)} إلى ${formatHour12(
@@ -30,19 +23,7 @@ export function formatDirectionNarrative(
     )}`;
   });
 
-  return { text: parts.join('، '), hiddenCount };
-}
-
-export function formatHiddenSegments(hiddenCount: number): string | null {
-  if (hiddenCount <= 0) return null;
-  if (hiddenCount === 1) return '+ فترة أخرى';
-  if (hiddenCount === 2) return '+ فترتان أخريان';
-  return `+ ${hiddenCount} فترات أخرى`;
-}
-
-/** «6:00 ص–11:00 ص» — نطاق زمني لفترة. */
-export function formatSegmentRange(startHour: number, endHourExclusive: number): string {
-  return `${formatHour12(startHour)}–${formatHour12(endHourExclusive)}`;
+  return parts.join('، ');
 }
 
 /** التقريب المرئي إلى أقرب عدد صحيح؛ القيمة الخام تبقى للحسابات (القسم 17). */

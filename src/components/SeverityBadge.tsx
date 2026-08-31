@@ -73,7 +73,12 @@ export function SeverityCounts({
           aria-label={`${SEVERITY_SHORT_LABELS[severity]} ${counts[severity]} ساعات`}
           title={SEVERITY_SHORT_LABELS[severity]}
         >
-          {index > 0 ? <span className="counts__sep" aria-hidden="true"> · </span> : null}
+          {index > 0 ? (
+            <span className="counts__sep" aria-hidden="true">
+              {' '}
+              ·{' '}
+            </span>
+          ) : null}
           <span className="counts__glyph" aria-hidden="true">
             {SEVERITY_GLYPHS[severity]}
           </span>

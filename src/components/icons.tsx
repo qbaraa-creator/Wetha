@@ -8,11 +8,7 @@ interface UiIconProps {
   className?: string;
 }
 
-function SvgIcon({
-  size = 18,
-  className,
-  children
-}: UiIconProps & { children: ReactNode }) {
+function SvgIcon({ size = 18, className, children }: UiIconProps & { children: ReactNode }) {
   return (
     <svg
       width={size}
@@ -176,10 +172,14 @@ export function MoonIcon({ index, size = 22 }: { index: number | null; size?: nu
       role="img"
       aria-label={`مرحلة القمر: ${MOON_PHASE_NAMES_AR[index]}`}
     >
-      <circle cx="12" cy="12" r={radius} fill={index === 4 ? light : dark} stroke="var(--moon-edge)" />
-      {index !== 0 && index !== 4 ? (
-        <path d={waxing ? rightHalf : leftHalf} fill={light} />
-      ) : null}
+      <circle
+        cx="12"
+        cy="12"
+        r={radius}
+        fill={index === 4 ? light : dark}
+        stroke="var(--moon-edge)"
+      />
+      {index !== 0 && index !== 4 ? <path d={waxing ? rightHalf : leftHalf} fill={light} /> : null}
       {ellipseRx > 0 ? (
         <ellipse cx="12" cy="12" rx={ellipseRx} ry={radius} fill={gibbous ? light : dark} />
       ) : null}

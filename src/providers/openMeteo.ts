@@ -233,7 +233,9 @@ function checkUnits(
       return;
     }
     if (received !== unit) {
-      warnings.push(`الحقل ${scope}.${field} عاد بوحدة غير متوقعة (${received} بدل ${unit}) فرُفض.`);
+      warnings.push(
+        `الحقل ${scope}.${field} عاد بوحدة غير متوقعة (${received} بدل ${unit}) فرُفض.`
+      );
       rejected.add(field);
     }
   });
@@ -278,7 +280,12 @@ export function normalizeOpenMeteoResponse(
     warnings.push(`عدد الأيام ${dailyAxis.times.length} بدل ${FORECAST_DAYS}.`);
   }
 
-  const rejectedHourly = checkUnits(payload.hourly_units, EXPECTED_HOURLY_UNITS, 'hourly', warnings);
+  const rejectedHourly = checkUnits(
+    payload.hourly_units,
+    EXPECTED_HOURLY_UNITS,
+    'hourly',
+    warnings
+  );
   const rejectedDaily = checkUnits(payload.daily_units, EXPECTED_DAILY_UNITS, 'daily', warnings);
   const rejectedCurrent = checkUnits(
     payload.current_units,
@@ -287,10 +294,42 @@ export function normalizeOpenMeteoResponse(
     warnings
   );
 
-  const humidity = readNumbers(payload.hourly, 'relative_humidity_2m', rejectedHourly, hourlyAxis, RANGES.humidity, 'hourly', warnings);
-  const speed = readNumbers(payload.hourly, 'wind_speed_10m', rejectedHourly, hourlyAxis, RANGES.speed, 'hourly', warnings);
-  const degree = readNumbers(payload.hourly, 'wind_direction_10m', rejectedHourly, hourlyAxis, RANGES.degree, 'hourly', warnings);
-  const gust = readNumbers(payload.hourly, 'wind_gusts_10m', rejectedHourly, hourlyAxis, RANGES.gust, 'hourly', warnings);
+  const humidity = readNumbers(
+    payload.hourly,
+    'relative_humidity_2m',
+    rejectedHourly,
+    hourlyAxis,
+    RANGES.humidity,
+    'hourly',
+    warnings
+  );
+  const speed = readNumbers(
+    payload.hourly,
+    'wind_speed_10m',
+    rejectedHourly,
+    hourlyAxis,
+    RANGES.speed,
+    'hourly',
+    warnings
+  );
+  const degree = readNumbers(
+    payload.hourly,
+    'wind_direction_10m',
+    rejectedHourly,
+    hourlyAxis,
+    RANGES.degree,
+    'hourly',
+    warnings
+  );
+  const gust = readNumbers(
+    payload.hourly,
+    'wind_gusts_10m',
+    rejectedHourly,
+    hourlyAxis,
+    RANGES.gust,
+    'hourly',
+    warnings
+  );
 
   const pointsByDate = new Map<string, HourlyWeatherPoint[]>();
   hourlyAxis.times.forEach((timeIso, index) => {
@@ -308,8 +347,24 @@ export function normalizeOpenMeteoResponse(
 
   const sunrise = readTimes(payload.daily, 'sunrise', rejectedDaily, dailyAxis, 'daily', warnings);
   const sunset = readTimes(payload.daily, 'sunset', rejectedDaily, dailyAxis, 'daily', warnings);
-  const moonPhase = readNumbers(payload.daily, 'moon_phase', rejectedDaily, dailyAxis, RANGES.moonPhase, 'daily', warnings);
-  const dominantDegree = readNumbers(payload.daily, 'wind_direction_10m_dominant', rejectedDaily, dailyAxis, RANGES.degree, 'daily', warnings);
+  const moonPhase = readNumbers(
+    payload.daily,
+    'moon_phase',
+    rejectedDaily,
+    dailyAxis,
+    RANGES.moonPhase,
+    'daily',
+    warnings
+  );
+  const dominantDegree = readNumbers(
+    payload.daily,
+    'wind_direction_10m_dominant',
+    rejectedDaily,
+    dailyAxis,
+    RANGES.degree,
+    'daily',
+    warnings
+  );
 
   const days: DailySummary[] = dailyAxis.times.map((date, index) => {
     const points = (pointsByDate.get(date) ?? []).sort((a, b) => a.localHour - b.localHour);
@@ -425,7 +480,11 @@ export function createOpenMeteoProvider(options: {
             );
           }
           const payload = (await response.json()) as OpenMeteoResponse;
-          const normalized = normalizeOpenMeteoResponse(payload, location, new Date().toISOString());
+          const normalized = normalizeOpenMeteoResponse(
+            payload,
+            location,
+            new Date().toISOString()
+          );
           if (normalized.days.length === 0) {
             throw new ProviderError('استجابة المزود بلا أيام صالحة.', false);
           }

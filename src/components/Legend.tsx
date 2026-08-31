@@ -15,7 +15,9 @@ export function Legend() {
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
       >
-        <span id="legend-title"><InfoIcon size={17} /> مفتاح الألوان وكيفية القراءة</span>
+        <span id="legend-title">
+          <InfoIcon size={17} /> مفتاح الألوان وكيفية القراءة
+        </span>
         <ChevronIcon size={18} />
       </button>
 
@@ -74,13 +76,11 @@ export function Legend() {
             <h3>عتبات الرطوبة</h3>
             <ul>
               <li>
-                <SeverityBadge severity="green" /> أقل من{' '}
-                {HUMIDITY_THRESHOLDS.greenMaxExclusive}%
+                <SeverityBadge severity="green" /> أقل من {HUMIDITY_THRESHOLDS.greenMaxExclusive}%
               </li>
               <li>
-                <SeverityBadge severity="orange" /> من{' '}
-                {HUMIDITY_THRESHOLDS.greenMaxExclusive}% إلى أقل من{' '}
-                {HUMIDITY_THRESHOLDS.redMinInclusive}%
+                <SeverityBadge severity="orange" /> من {HUMIDITY_THRESHOLDS.greenMaxExclusive}% إلى
+                أقل من {HUMIDITY_THRESHOLDS.redMinInclusive}%
               </li>
               <li>
                 <SeverityBadge severity="red" /> {HUMIDITY_THRESHOLDS.redMinInclusive}% فأكثر

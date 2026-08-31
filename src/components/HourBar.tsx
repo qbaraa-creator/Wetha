@@ -5,12 +5,8 @@ import { formatHour12 } from '../domain/time';
 import { DIRECTION_NAMES_AR, describeWindReason, getWindReasonCode } from '../domain/wind';
 import type { HourlyWeatherPoint } from '../domain/types';
 
-export type BarKind = 'wind' | 'humidity';
-
 interface HourBarProps {
   hours: HourlyWeatherPoint[];
-  /** توافق انتقالي مع المكوّن القديم؛ غيابه يرسم الطبقتين المدمجتين. */
-  kind?: BarKind;
   label: string;
   /** موضع علامة «الآن» كساعة كسرية 0–24، أو null لليوم غير الحالي. */
   nowHour?: number | null;
@@ -38,7 +34,10 @@ export function describeHour(point: HourlyWeatherPoint): string {
   if (point.windSeverity) {
     const reason =
       point.direction && point.windSpeedKmh !== null
-        ? describeWindReason(getWindReasonCode(point.direction, point.windSpeedKmh), point.direction)
+        ? describeWindReason(
+            getWindReasonCode(point.direction, point.windSpeedKmh),
+            point.direction
+          )
         : '';
     parts.push(`رياح ${SEVERITY_SHORT_LABELS[point.windSeverity]}${reason ? ` — ${reason}` : ''}`);
   }
@@ -69,7 +68,6 @@ export function describeHourValues(point: HourlyWeatherPoint): string {
  */
 export function HourBar({
   hours,
-  kind,
   label,
   nowHour = null,
   showAxis = false,
@@ -87,11 +85,7 @@ export function HourBar({
   const move = (delta: number) => {
     // أول ضغطة سهم تختار طرف الشريط لا الساعة التالية له.
     setSelected((previous) =>
-      previous === null
-        ? delta > 0
-          ? 0
-          : 23
-        : Math.min(23, Math.max(0, previous + delta))
+      previous === null ? (delta > 0 ? 0 : 23) : Math.min(23, Math.max(0, previous + delta))
     );
   };
 
@@ -190,25 +184,20 @@ export function HourBar({
               aria-label={point ? describeHour(point) : `${formatHour12(hour)} · لا بيانات`}
               className={[
                 'hourbar__cell',
-                kind ? 'hourbar__cell--single' : '',
                 dimmed ? 'is-dim' : '',
                 selected === hour ? 'is-selected' : ''
               ]
                 .filter(Boolean)
                 .join(' ')}
             >
-              {kind !== 'humidity' ? (
-                <span
-                  className={`hourbar__lane hourbar__lane--wind hourbar__lane--${point?.windSeverity ?? 'missing'}`}
-                  aria-hidden="true"
-                />
-              ) : null}
-              {kind !== 'wind' ? (
-                <span
-                  className={`hourbar__lane hourbar__lane--humidity hourbar__lane--${point?.humiditySeverity ?? 'missing'}`}
-                  aria-hidden="true"
-                />
-              ) : null}
+              <span
+                className={`hourbar__lane hourbar__lane--wind hourbar__lane--${point?.windSeverity ?? 'missing'}`}
+                aria-hidden="true"
+              />
+              <span
+                className={`hourbar__lane hourbar__lane--humidity hourbar__lane--${point?.humiditySeverity ?? 'missing'}`}
+                aria-hidden="true"
+              />
             </div>
           );
         })}
@@ -231,7 +220,7 @@ export function HourBar({
         </div>
       ) : null}
 
-      <p className="hourbar__readout" aria-live="polite">
+      <p className="hourbar__readout" aria-hidden="true">
         {selectedPoint
           ? describeHourValues(selectedPoint)
           : selected !== null

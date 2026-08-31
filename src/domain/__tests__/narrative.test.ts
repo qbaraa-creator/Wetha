@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDirectionNarrative, formatHiddenSegments, displayRange } from '../narrative';
+import { displayRange, formatDirectionNarrative } from '../narrative';
 import type { DirectionSegment } from '../types';
 
 const segments: DirectionSegment[] = [
@@ -10,21 +10,9 @@ const segments: DirectionSegment[] = [
 
 describe('القسم 5.6 — صيغة عرض تحولات الاتجاه', () => {
   it('يطابق المثال الوارد في الوثيقة', () => {
-    expect(formatDirectionNarrative(segments).text).toBe(
+    expect(formatDirectionNarrative(segments)).toBe(
       'شمالية غربية من 12:00 ص إلى 11:00 ص، ثم غربية من 11:00 ص إلى 6:00 م، ثم شمالية غربية حتى نهاية اليوم'
     );
-  });
-
-  it('يختصر إلى ثلاثة أجزاء ويعلن الفترات المخفية', () => {
-    const many: DirectionSegment[] = [
-      ...segments.slice(0, 2),
-      { startHour: 18, endHourExclusive: 20, direction: 'N' },
-      { startHour: 20, endHourExclusive: 24, direction: 'NW' }
-    ];
-    const result = formatDirectionNarrative(many, { maxSegments: 3 });
-    expect(result.hiddenCount).toBe(1);
-    expect(formatHiddenSegments(result.hiddenCount)).toBe('+ فترة أخرى');
-    expect(result.text).not.toContain('حتى نهاية اليوم');
   });
 
   it('يعرض المدى بعد التقريب المرئي فقط', () => {

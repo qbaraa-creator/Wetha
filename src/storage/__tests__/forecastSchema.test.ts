@@ -55,7 +55,9 @@ describe('مدقق التخزين — غلاف السجل', () => {
   });
 
   it('يرفض إصدار مخطط مختلفًا', () => {
-    expect(parseStoredForecast(corrupt('schemaVersion', STORAGE_SCHEMA_VERSION + 1), LOCATION.id)).toBeNull();
+    expect(
+      parseStoredForecast(corrupt('schemaVersion', STORAGE_SCHEMA_VERSION + 1), LOCATION.id)
+    ).toBeNull();
   });
 
   it('يرفض موقعًا مختلفًا', () => {
@@ -115,7 +117,9 @@ describe('مدقق التخزين — عمق التوقع', () => {
   });
 
   it('يرفض تاريخ يوم غير صالح', () => {
-    expect(parseStoredForecast(corrupt('forecast.days.2.date', '2026-02-31'), LOCATION.id)).toBeNull();
+    expect(
+      parseStoredForecast(corrupt('forecast.days.2.date', '2026-02-31'), LOCATION.id)
+    ).toBeNull();
   });
 
   it('يرفض يومًا بلا ساعات', () => {
@@ -123,39 +127,69 @@ describe('مدقق التخزين — عمق التوقع', () => {
   });
 
   it('يرفض ساعة بلا localHour أو بساعة خارج 0–23', () => {
-    expect(parseStoredForecast(corrupt('forecast.days.0.hours.3.localHour', undefined), LOCATION.id)).toBeNull();
-    expect(parseStoredForecast(corrupt('forecast.days.0.hours.3.localHour', 26), LOCATION.id)).toBeNull();
+    expect(
+      parseStoredForecast(corrupt('forecast.days.0.hours.3.localHour', undefined), LOCATION.id)
+    ).toBeNull();
+    expect(
+      parseStoredForecast(corrupt('forecast.days.0.hours.3.localHour', 26), LOCATION.id)
+    ).toBeNull();
   });
 
   it('يرفض ساعة تنتمي ليوم آخر', () => {
-    expect(parseStoredForecast(corrupt('forecast.days.0.hours.3.localDate', '2026-08-25'), LOCATION.id)).toBeNull();
+    expect(
+      parseStoredForecast(corrupt('forecast.days.0.hours.3.localDate', '2026-08-25'), LOCATION.id)
+    ).toBeNull();
   });
 
   it('يرفض قيمة رقمية صارت نصًا بعد التحريف', () => {
-    expect(parseStoredForecast(corrupt('forecast.days.0.hours.3.windSpeedKmh', '20'), LOCATION.id)).toBeNull();
+    expect(
+      parseStoredForecast(corrupt('forecast.days.0.hours.3.windSpeedKmh', '20'), LOCATION.id)
+    ).toBeNull();
   });
 
   it('يرفض اتجاهًا أو حالة خارج المجموعة المعتمدة', () => {
-    expect(parseStoredForecast(corrupt('forecast.days.0.hours.3.direction', 'NNW'), LOCATION.id)).toBeNull();
-    expect(parseStoredForecast(corrupt('forecast.days.0.hours.3.windSeverity', 'yellow'), LOCATION.id)).toBeNull();
-    expect(parseStoredForecast(corrupt('forecast.days.0.dominantDirection', 'شمالية'), LOCATION.id)).toBeNull();
+    expect(
+      parseStoredForecast(corrupt('forecast.days.0.hours.3.direction', 'NNW'), LOCATION.id)
+    ).toBeNull();
+    expect(
+      parseStoredForecast(corrupt('forecast.days.0.hours.3.windSeverity', 'yellow'), LOCATION.id)
+    ).toBeNull();
+    expect(
+      parseStoredForecast(corrupt('forecast.days.0.dominantDirection', 'شمالية'), LOCATION.id)
+    ).toBeNull();
   });
 
   it('يرفض طور قمر خارج 0–7', () => {
-    expect(parseStoredForecast(corrupt('forecast.days.0.moonPhaseIndex', 9), LOCATION.id)).toBeNull();
+    expect(
+      parseStoredForecast(corrupt('forecast.days.0.moonPhaseIndex', 9), LOCATION.id)
+    ).toBeNull();
   });
 
   it('يرفض فترة بحدود مقلوبة أو حالة مجهولة', () => {
-    expect(parseStoredForecast(corrupt('forecast.days.0.windSegments.0.endHourExclusive', 0), LOCATION.id)).toBeNull();
-    expect(parseStoredForecast(corrupt('forecast.days.0.humiditySegments.0.severity', 'grey'), LOCATION.id)).toBeNull();
+    expect(
+      parseStoredForecast(
+        corrupt('forecast.days.0.windSegments.0.endHourExclusive', 0),
+        LOCATION.id
+      )
+    ).toBeNull();
+    expect(
+      parseStoredForecast(
+        corrupt('forecast.days.0.humiditySegments.0.severity', 'grey'),
+        LOCATION.id
+      )
+    ).toBeNull();
   });
 
   it('يرفض وقت شروق بصيغة تالفة', () => {
-    expect(parseStoredForecast(corrupt('forecast.days.0.sunriseIso', '06:02'), LOCATION.id)).toBeNull();
+    expect(
+      parseStoredForecast(corrupt('forecast.days.0.sunriseIso', '06:02'), LOCATION.id)
+    ).toBeNull();
   });
 
   it('يرفض لقطة آنية بحقل محرّف', () => {
-    expect(parseStoredForecast(corrupt('forecast.current.windDegree', 'شمال'), LOCATION.id)).toBeNull();
+    expect(
+      parseStoredForecast(corrupt('forecast.current.windDegree', 'شمال'), LOCATION.id)
+    ).toBeNull();
   });
 
   it('NaN و Infinity لا يمران عبر المدقق', () => {

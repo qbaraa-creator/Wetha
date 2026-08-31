@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { LOCATION, REFRESH_POLICY } from '../config/appConfig';
 import { createOpenMeteoProvider } from '../providers/openMeteo';
 import { loadForecast, saveForecast } from '../storage/forecastStore';
-import { nowInRiyadh } from '../domain/time';
+import { msUntilNextHour, nowInRiyadh } from '../domain/time';
 import type { NormalizedForecast } from '../domain/types';
 
 export type ForecastStatus = 'loading' | 'ready' | 'error';
@@ -33,6 +33,15 @@ export function coversToday(forecast: NormalizedForecast | null): boolean {
   return forecast.days.some((day) => day.date === today);
 }
 
+/** عند العودة للتطبيق لا نجلب إلا إذا أصبحت القراءة قديمة أو تجاوزها اليوم. */
+export function shouldRefreshForecast(forecast: NormalizedForecast | null): boolean {
+  return (
+    !forecast ||
+    ageMs(forecast.fetchedAtIso) > REFRESH_POLICY.staleAfterMs ||
+    !coversToday(forecast)
+  );
+}
+
 /**
  * تفاصيل التحذيرات تقنية (أسماء حقول ووحدات وأطوال مصفوفات) ولا تفيد القارئ،
  * فتذهب إلى سجل المطوّر بينما تُعرض للمستخدم جملة واحدة مبسطة (القسم 16).
@@ -53,6 +62,7 @@ export function useForecast(): ForecastState {
   /** يمنع إطلاق طلبين متوازيين بسبب الضغط المتكرر (القسم 15.1). */
   const inFlight = useRef(false);
   const hasData = useRef(false);
+  const forecastRef = useRef<NormalizedForecast | null>(null);
 
   const fetchNow = useCallback(async () => {
     if (inFlight.current) return;
@@ -62,6 +72,7 @@ export function useForecast(): ForecastState {
     try {
       const fresh = await provider.getSevenDayForecast(LOCATION);
       logWarnings('network', fresh.warnings);
+      forecastRef.current = fresh;
       setForecast(fresh);
       setSource('network');
       setStatus('ready');
@@ -69,8 +80,7 @@ export function useForecast(): ForecastState {
       hasData.current = true;
       await saveForecast(fresh);
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'تعذّر الوصول إلى مصدر البيانات.';
+      const message = error instanceof Error ? error.message : 'تعذّر الوصول إلى مصدر البيانات.';
       setErrorMessage(message);
       if (!hasData.current) setStatus('error');
     } finally {
@@ -88,16 +98,14 @@ export function useForecast(): ForecastState {
 
       if (stored) {
         logWarnings('cache', stored.forecast.warnings);
+        forecastRef.current = stored.forecast;
         setForecast(stored.forecast);
         setSource('cache');
         setStatus('ready');
         hasData.current = true;
         // تحديث خلفي إذا تجاوز آخر جلب المهلة، أو إذا لم يعد المحفوظ يشمل اليوم
         // مهما كان عمره — أسبوع بلا تاريخ اليوم لا يجيب سؤال المستخدم أصلًا.
-        if (
-          ageMs(stored.fetchedAtIso) > REFRESH_POLICY.staleAfterMs ||
-          !coversToday(stored.forecast)
-        ) {
+        if (shouldRefreshForecast(stored.forecast)) {
           void fetchNow();
         }
         return;
@@ -112,12 +120,29 @@ export function useForecast(): ForecastState {
   }, [fetchNow]);
 
   useEffect(() => {
-    const timer = window.setInterval(() => void fetchNow(), REFRESH_POLICY.intervalMs);
+    let timer = 0;
+    const scheduleNextHour = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        void fetchNow();
+        scheduleNextHour();
+      }, msUntilNextHour());
+    };
+
     const onOnline = () => void fetchNow();
+    const refreshIfStale = () => {
+      if (!document.hidden && shouldRefreshForecast(forecastRef.current)) void fetchNow();
+    };
+
+    scheduleNextHour();
     window.addEventListener('online', onOnline);
+    window.addEventListener('focus', refreshIfStale);
+    document.addEventListener('visibilitychange', refreshIfStale);
     return () => {
-      window.clearInterval(timer);
+      window.clearTimeout(timer);
       window.removeEventListener('online', onOnline);
+      window.removeEventListener('focus', refreshIfStale);
+      document.removeEventListener('visibilitychange', refreshIfStale);
     };
   }, [fetchNow]);
 

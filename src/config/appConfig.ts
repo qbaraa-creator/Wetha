@@ -56,34 +56,15 @@ export const DOMINANT_DIRECTION_MIN_SHARE = 0.5;
 /** القسم 5.6 — أقل عدد ساعات متتالية يثبّت تحول الاتجاه. */
 export const DIRECTION_CHANGE_MIN_HOURS = 2;
 
-/** القسم 9.2 — أقصى عدد فترات اتجاه تُذكر نصًا في بطاقة الأسبوع. */
-export const WEEK_CARD_MAX_SEGMENTS = 3;
-
 /** القسم 15.1 — سياسة التحديث. */
 export const REFRESH_POLICY = {
   staleAfterMs: 30 * 60 * 1000,
-  intervalMs: 60 * 60 * 1000,
   requestTimeoutMs: 10_000,
   maxRetries: 1
 } as const;
 
 /** زيد لأن السجل القديم يحمل حالات محسوبة بالعتبات السابقة. */
 export const STORAGE_SCHEMA_VERSION = 2;
-
-/** القسم 18.2 — ألوان الحالات. */
-export const SEVERITY_COLORS: Record<Severity | 'neutral', { base: string; surface: string }> = {
-  green: { base: '#287A50', surface: '#E7F5ED' },
-  orange: { base: '#B85C18', surface: '#FFF1E5' },
-  red: { base: '#A93A4A', surface: '#FBEAEC' },
-  neutral: { base: '#627083', surface: '#EEF2F6' }
-};
-
-/** القسم 18.3 — كل لون يصاحبه اسم صريح؛ اللون ليس الوسيلة الوحيدة. */
-export const SEVERITY_LABELS: Record<Severity, string> = {
-  green: 'أخضر · مناسب',
-  orange: 'برتقالي · متوسط',
-  red: 'أحمر · غير مناسب'
-};
 
 export const SEVERITY_SHORT_LABELS: Record<Severity, string> = {
   green: 'أخضر',

@@ -12,10 +12,14 @@ const noAstronomy = {
 
 describe('القسم 5.5 — الاتجاه العام', () => {
   it('القطاع الأكثر حضورًا يصبح الاتجاه العام عند بلوغه 50%', () => {
-    const hours = makeFullDay('2026-08-19', { direction: 'NW', speed: 20 }, {
-      0: { direction: 'W', speed: 20 },
-      1: { direction: 'W', speed: 20 }
-    });
+    const hours = makeFullDay(
+      '2026-08-19',
+      { direction: 'NW', speed: 20 },
+      {
+        0: { direction: 'W', speed: 20 },
+        1: { direction: 'W', speed: 20 }
+      }
+    );
     const result = resolveDominantDirection(smoothDirectionJitter(hours));
     expect(result.dominantDirection).toBe('NW');
     expect(result.variableDirections).toBeUndefined();
@@ -35,9 +39,7 @@ describe('القسم 5.5 — الاتجاه العام', () => {
 
   it('التعادل يُرجَّح بمجموع السرعات', () => {
     const specs = Array.from({ length: 24 }, (_, hour) =>
-      hour < 12
-        ? { direction: 'NW' as const, speed: 10 }
-        : { direction: 'NE' as const, speed: 30 }
+      hour < 12 ? { direction: 'NW' as const, speed: 10 } : { direction: 'NE' as const, speed: 30 }
     );
     const result = resolveDominantDirection(makeHours('2026-08-19', specs));
     expect(result.dominantDirection).toBe('NE');
@@ -46,9 +48,13 @@ describe('القسم 5.5 — الاتجاه العام', () => {
 
 describe('القسمان 6.3 و21.5 — ملخص اليوم', () => {
   it('مجموع ساعات كل لون يساوي عدد الساعات الصالحة', () => {
-    const hours = makeFullDay('2026-08-19', { direction: 'NW', speed: 20, humidity: 55 }, {
-      3: { direction: null, speed: null, humidity: null }
-    });
+    const hours = makeFullDay(
+      '2026-08-19',
+      { direction: 'NW', speed: 20, humidity: 55 },
+      {
+        3: { direction: null, speed: null, humidity: null }
+      }
+    );
     const summary = buildDailySummary('2026-08-19', hours, noAstronomy);
     const windTotal =
       summary.windHoursBySeverity.green +
@@ -63,11 +69,7 @@ describe('القسمان 6.3 و21.5 — ملخص اليوم', () => {
   });
 
   it('القيمة المفقودة لا تدخل المتوسط', () => {
-    const hours = makeHours('2026-08-19', [
-      { humidity: 40 },
-      { humidity: null },
-      { humidity: 60 }
-    ]);
+    const hours = makeHours('2026-08-19', [{ humidity: 40 }, { humidity: null }, { humidity: 60 }]);
     const summary = buildDailySummary('2026-08-19', hours, noAstronomy);
     expect(summary.humidityMean).toBe(50);
     expect(summary.humidityMin).toBe(40);
@@ -76,9 +78,13 @@ describe('القسمان 6.3 و21.5 — ملخص اليوم', () => {
   });
 
   it('أعلى هبّة تُعرض مع الساعة الصحيحة', () => {
-    const hours = makeFullDay('2026-08-19', { direction: 'NW', speed: 20, gust: 30 }, {
-      17: { direction: 'NW', speed: 20, gust: 52 }
-    });
+    const hours = makeFullDay(
+      '2026-08-19',
+      { direction: 'NW', speed: 20, gust: 30 },
+      {
+        17: { direction: 'NW', speed: 20, gust: 52 }
+      }
+    );
     const summary = buildDailySummary('2026-08-19', hours, noAstronomy);
     expect(summary.gustMaxKmh).toBe(52);
     expect(summary.gustMaxTimeIso).toBe('2026-08-19T17:00');

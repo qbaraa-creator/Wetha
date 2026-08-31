@@ -64,7 +64,13 @@ describe('التطبيق الرئيسي', () => {
   it('يعرض حالة الخطأ وزر إعادة المحاولة', () => {
     const refresh = vi.fn();
     mockedUseForecast.mockReturnValue(
-      state({ status: 'error', forecast: null, source: null, errorMessage: 'تعذر الاتصال', refresh })
+      state({
+        status: 'error',
+        forecast: null,
+        source: null,
+        errorMessage: 'تعذر الاتصال',
+        refresh
+      })
     );
     render(<App />);
 

@@ -47,9 +47,7 @@ const END_OF_DAY_ISO = /^\d{4}-\d{2}-\d{2}T24:00(:00)?$/;
  */
 const isExclusiveEndIso = (value: unknown): value is string =>
   isValidHourIso(value) ||
-  (typeof value === 'string' &&
-    END_OF_DAY_ISO.test(value) &&
-    isValidDateIso(value.slice(0, 10)));
+  (typeof value === 'string' && END_OF_DAY_ISO.test(value) && isValidDateIso(value.slice(0, 10)));
 
 const isDirection = (value: unknown): value is DirectionCode =>
   typeof value === 'string' && DIRECTIONS.has(value);
@@ -138,7 +136,10 @@ function isDailySummary(value: unknown): value is DailySummary {
   if (!Array.isArray(value.humiditySegments) || !value.humiditySegments.every(isTimeSegment)) {
     return false;
   }
-  if (!Array.isArray(value.directionSegments) || !value.directionSegments.every(isDirectionSegment)) {
+  if (
+    !Array.isArray(value.directionSegments) ||
+    !value.directionSegments.every(isDirectionSegment)
+  ) {
     return false;
   }
 

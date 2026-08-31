@@ -7,11 +7,7 @@ import {
 } from './wind';
 import { getHumiditySeverity } from './humidity';
 import { isoDatePart, isoHourPart, buildIso } from './time';
-import type {
-  DirectionSegment,
-  HourlyWeatherPoint,
-  TimeSegment
-} from './types';
+import type { DirectionSegment, HourlyWeatherPoint, TimeSegment } from './types';
 
 /** يبني نقطة ساعية بكل تصنيفاتها من القيم الخام (بلا تنعيم بعد). */
 export function buildHourlyPoint(input: {

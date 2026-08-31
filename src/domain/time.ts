@@ -11,6 +11,12 @@ const DAY_NAMES_AR = ['الأحد', 'الاثنين', 'الثلاثاء', 'ال�
 const DATE_ISO = /^\d{4}-\d{2}-\d{2}$/;
 const HOUR_ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/;
 
+export interface RiyadhNow {
+  dateIso: string;
+  hour: number;
+  minute: number;
+}
+
 /** يرفض ما يمرّ من التعبير النمطي لكنه ليس تاريخًا حقيقيًا مثل 2026-02-31. */
 function isRealCalendarDate(dateIso: string): boolean {
   const [year, month, day] = dateIso.split('-').map(Number);
@@ -58,11 +64,7 @@ export function buildIso(dateIso: string, hour: number): string {
 }
 
 /** لحظة الآن بتوقيت الرياض، مستقلة عن إعداد الجهاز. */
-export function nowInRiyadh(reference: Date = new Date()): {
-  dateIso: string;
-  hour: number;
-  minute: number;
-} {
+export function nowInRiyadh(reference: Date = new Date()): RiyadhNow {
   const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone: LOCATION.timezone,
     year: 'numeric',
@@ -81,6 +83,13 @@ export function nowInRiyadh(reference: Date = new Date()): {
     hour: Number(get('hour')) % 24,
     minute: Number(get('minute'))
   };
+}
+
+/** المدة حتى رأس الساعة التالية؛ تمنع انجراف مؤقّت يبدأ من لحظة فتح التطبيق. */
+export function msUntilNextHour(reference: Date = new Date()): number {
+  const elapsedInHour =
+    reference.getMinutes() * 60_000 + reference.getSeconds() * 1_000 + reference.getMilliseconds();
+  return 60 * 60_000 - elapsedInHour;
 }
 
 /** '2026-08-19' → '19/08/2026' (القسم 17). */

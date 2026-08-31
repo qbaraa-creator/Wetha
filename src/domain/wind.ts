@@ -1,8 +1,6 @@
-import { DIRECTION_SEVERITY, SPEED_THRESHOLDS } from '../config/appConfig';
+import { DIRECTION_SECTORS, DIRECTION_SEVERITY, SPEED_THRESHOLDS } from '../config/appConfig';
 import { worseSeverity } from './severity';
 import type { DirectionCode, Severity, WindReasonCode } from './types';
-
-const SECTORS: DirectionCode[] = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
 
 export const DIRECTION_NAMES_AR: Record<DirectionCode, string> = {
   N: 'شمالية',
@@ -24,7 +22,7 @@ export function normalizeDegrees(value: number): number {
 /** القسم 5.1 — تقريب الدرجة إلى أحد ثمانية قطاعات. */
 export function degreeToDirection(value: number): DirectionCode {
   const index = Math.floor((normalizeDegrees(value) + 22.5) / 45) % 8;
-  return SECTORS[index];
+  return DIRECTION_SECTORS[index];
 }
 
 export function getDirectionSeverity(direction: DirectionCode): Severity {

@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  buildHumiditySegments,
-  buildWindSegments,
-  smoothDirectionJitter
-} from '../segments';
+import { buildHumiditySegments, buildWindSegments, smoothDirectionJitter } from '../segments';
 import { makeHours } from './testHelpers';
 
 describe('القسم 21.4 — التجميع الزمني', () => {
@@ -90,11 +86,7 @@ describe('القسم 21.4 — التجميع الزمني', () => {
   });
 
   it('5) رطوبة 49 ثم 50 ثم 65 تنتج أخضر ثم برتقالي ثم أحمر', () => {
-    const hours = makeHours('2026-08-19', [
-      { humidity: 49 },
-      { humidity: 50 },
-      { humidity: 65 }
-    ]);
+    const hours = makeHours('2026-08-19', [{ humidity: 49 }, { humidity: 50 }, { humidity: 65 }]);
     const segments = buildHumiditySegments(hours);
     expect(segments.map((segment) => segment.severity)).toEqual(['green', 'orange', 'red']);
     expect(segments[0].minValue).toBe(49);
@@ -102,11 +94,7 @@ describe('القسم 21.4 — التجميع الزمني', () => {
   });
 
   it('لا تُخفى فترة الرطوبة ذات الساعة الواحدة', () => {
-    const hours = makeHours('2026-08-19', [
-      { humidity: 80 },
-      { humidity: 40 },
-      { humidity: 80 }
-    ]);
+    const hours = makeHours('2026-08-19', [{ humidity: 80 }, { humidity: 40 }, { humidity: 80 }]);
     expect(buildHumiditySegments(hours)).toHaveLength(3);
   });
 

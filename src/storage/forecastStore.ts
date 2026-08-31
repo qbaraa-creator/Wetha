@@ -33,25 +33,32 @@ function openDatabase(): Promise<IDBDatabase> {
 
 async function idbSet(record: StoredForecast): Promise<void> {
   const db = await openDatabase();
-  await new Promise<void>((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, 'readwrite');
-    transaction.objectStore(STORE_NAME).put(record, RECORD_KEY);
-    transaction.oncomplete = () => resolve();
-    transaction.onerror = () => reject(transaction.error);
-  });
-  db.close();
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readwrite');
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+      transaction.onabort = () => reject(transaction.error ?? new Error('أُلغي حفظ التوقع.'));
+      transaction.objectStore(STORE_NAME).put(record, RECORD_KEY);
+    });
+  } finally {
+    db.close();
+  }
 }
 
 async function idbGet(): Promise<unknown> {
   const db = await openDatabase();
-  const value = await new Promise<unknown>((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, 'readonly');
-    const request = transaction.objectStore(STORE_NAME).get(RECORD_KEY);
-    request.onsuccess = () => resolve(request.result ?? null);
-    request.onerror = () => reject(request.error);
-  });
-  db.close();
-  return value;
+  try {
+    return await new Promise<unknown>((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readonly');
+      transaction.onabort = () => reject(transaction.error ?? new Error('أُلغيت قراءة التوقع.'));
+      const request = transaction.objectStore(STORE_NAME).get(RECORD_KEY);
+      request.onsuccess = () => resolve(request.result ?? null);
+      request.onerror = () => reject(request.error);
+    });
+  } finally {
+    db.close();
+  }
 }
 
 /** لا تُستبدل البيانات الصحيحة باستجابة ناقصة أو تالفة (القسم 15.2). */

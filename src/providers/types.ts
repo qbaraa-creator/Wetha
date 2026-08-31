@@ -11,7 +11,10 @@ export interface WeatherProvider {
 }
 
 export class ProviderError extends Error {
-  constructor(message: string, readonly transient: boolean) {
+  constructor(
+    message: string,
+    readonly transient: boolean
+  ) {
     super(message);
     this.name = 'ProviderError';
   }

@@ -5,12 +5,7 @@ import {
   buildWindSegments,
   smoothDirectionJitter
 } from './segments';
-import type {
-  DailySummary,
-  DirectionCode,
-  HourlyWeatherPoint,
-  Severity
-} from './types';
+import type { DailySummary, DirectionCode, HourlyWeatherPoint, Severity } from './types';
 
 const EMPTY_COUNTS = (): Record<Severity, number> => ({ green: 0, orange: 0, red: 0 });
 

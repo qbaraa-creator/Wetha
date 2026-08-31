@@ -9,6 +9,20 @@ export default defineConfig({
   // (`/<repo>/` لمشروع Pages أو `/` لمستودع username.github.io).
   base,
   plugins: [
+    {
+      name: 'development-hmr-worker-csp',
+      apply: 'serve',
+      transformIndexHtml: {
+        order: 'pre',
+        handler(html, context) {
+          // Vite يستخدم SharedWorker من blob لإبقاء HMR حيًا. هذا التحويل خاص
+          // بخادم التطوير؛ ملف الإنتاج يبقى worker-src 'self' بلا سماح blob.
+          return context.server
+            ? html.replace("worker-src 'self';", "worker-src 'self' blob:;")
+            : html;
+        }
+      }
+    },
     react(),
     VitePWA({
       registerType: 'autoUpdate',
@@ -48,6 +62,23 @@ export default defineConfig({
     environment: 'node',
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
     setupFiles: ['./src/test/setup.ts'],
-    restoreMocks: true
+    restoreMocks: true,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json-summary'],
+      exclude: ['src/main.tsx', 'src/test/**', 'src/**/*.test.ts', 'src/**/*.test.tsx'],
+      thresholds: {
+        statements: 80,
+        branches: 80,
+        functions: 80,
+        lines: 80,
+        'src/storage/forecastStore.ts': {
+          statements: 90,
+          branches: 85,
+          functions: 90,
+          lines: 90
+        }
+      }
+    }
   }
 });

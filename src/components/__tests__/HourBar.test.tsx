@@ -99,5 +99,7 @@ describe('الشريط الساعي', () => {
     const readout = document.querySelector('.hourbar__readout');
     expect(readout).toHaveTextContent(/سرعة 20 كم\/س/);
     expect(readout).not.toHaveTextContent(/أخضر|برتقالي|أحمر/);
+    expect(readout).toHaveAttribute('aria-hidden', 'true');
+    expect(readout).not.toHaveAttribute('aria-live');
   });
 });

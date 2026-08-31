@@ -11,8 +11,16 @@ const noAstronomy = {
   providerDominantDirection: null
 };
 
-function day(date: string, humidity: number, extras: Record<number, { humidity: number }> = {}): DailySummary {
-  return buildDailySummary(date, makeFullDay(date, { direction: 'NW', speed: 20, humidity }, extras), noAstronomy);
+function day(
+  date: string,
+  humidity: number,
+  extras: Record<number, { humidity: number }> = {}
+): DailySummary {
+  return buildDailySummary(
+    date,
+    makeFullDay(date, { direction: 'NW', speed: 20, humidity }, extras),
+    noAstronomy
+  );
 }
 
 describe('القسم 6.4 — أكثر وأقل يوم رطوبة', () => {
@@ -76,12 +84,20 @@ describe('القسم 9.2.ب — أكثر ساعات رياح خضراء', () => 
   it('عند تعادل الخضراء يرجّح الأقل ساعات حمراء', () => {
     const a = buildDailySummary(
       '2026-08-19',
-      makeFullDay('2026-08-19', { direction: 'NW', speed: 20 }, { 0: { direction: 'S', speed: 20 }, 1: { direction: 'S', speed: 20 } }),
+      makeFullDay(
+        '2026-08-19',
+        { direction: 'NW', speed: 20 },
+        { 0: { direction: 'S', speed: 20 }, 1: { direction: 'S', speed: 20 } }
+      ),
       noAstronomy
     );
     const b = buildDailySummary(
       '2026-08-20',
-      makeFullDay('2026-08-20', { direction: 'NW', speed: 20 }, { 0: { direction: 'W', speed: 20 }, 1: { direction: 'W', speed: 20 } }),
+      makeFullDay(
+        '2026-08-20',
+        { direction: 'NW', speed: 20 },
+        { 0: { direction: 'W', speed: 20 }, 1: { direction: 'W', speed: 20 } }
+      ),
       noAstronomy
     );
     expect(a.windHoursBySeverity.green).toBe(b.windHoursBySeverity.green);
