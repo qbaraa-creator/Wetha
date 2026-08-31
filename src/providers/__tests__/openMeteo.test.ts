@@ -305,6 +305,76 @@ describe('مقارنة الاتجاه اليومي بالمحسوب', () => {
   });
 });
 
+describe('الحرارة واحتمال الهطول', () => {
+  it('يقبل حدي صلاحية الحرارة بالضبط كما يقبلهما التخزين', () => {
+    const payload = fixture();
+    payload.daily.temperature_2m_max[0] = 60;
+    payload.daily.temperature_2m_min[0] = -90;
+    const forecast = normalize(payload);
+    expect(forecast.days[0].temperatureMaxC).toBe(60);
+    expect(forecast.days[0].temperatureMinC).toBe(-90);
+    expect(forecast.warnings).toEqual([]);
+  });
+  it('يمرر العظمى والصغرى والاحتمال كما وصلت', () => {
+    const [day] = normalize(fixture()).days;
+    expect(day.temperatureMaxC).toBe(38.3);
+    expect(day.temperatureMinC).toBe(31.4);
+    expect(day.precipitationProbabilityMax).toBe(0);
+  });
+
+  it('يطلب الحقول الثلاثة من المزود', () => {
+    const url = buildForecastUrl(LOCATION);
+    expect(url).toContain('temperature_2m_max');
+    expect(url).toContain('temperature_2m_min');
+    expect(url).toContain('precipitation_probability_max');
+  });
+
+  it('الوحدة غير المتوقعة للحرارة تُفرغ الحقل ولا تُحوَّل صامتة', () => {
+    const payload = fixture();
+    payload.daily_units.temperature_2m_max = '°F';
+    const forecast = normalize(payload);
+    expect(hasWarning(forecast.warnings, 'temperature_2m_max')).toBe(true);
+    expect(forecast.days[0].temperatureMaxC).toBeNull();
+    // الصغرى سليمة الوحدة فتبقى
+    expect(forecast.days[0].temperatureMinC).toBe(31.4);
+  });
+
+  it('الاحتمال خارج 0–100 يُفرَّغ', () => {
+    const payload = fixture();
+    payload.daily.precipitation_probability_max[0] = 130;
+    payload.daily.precipitation_probability_max[1] = -5;
+    const forecast = normalize(payload);
+    expect(forecast.days[0].precipitationProbabilityMax).toBeNull();
+    expect(forecast.days[1].precipitationProbabilityMax).toBeNull();
+  });
+
+  it('الحرارة خارج المجال الأرضي تُفرَّغ', () => {
+    const payload = fixture();
+    payload.daily.temperature_2m_max[0] = 999;
+    expect(normalize(payload).days[0].temperatureMaxC).toBeNull();
+  });
+
+  it('العظمى الأقل من الصغرى تُفرِّغ الاثنتين مع تحذير', () => {
+    const payload = fixture();
+    payload.daily.temperature_2m_max[0] = 20;
+    payload.daily.temperature_2m_min[0] = 35;
+    const forecast = normalize(payload);
+    expect(forecast.days[0].temperatureMaxC).toBeNull();
+    expect(forecast.days[0].temperatureMinC).toBeNull();
+    expect(hasWarning(forecast.warnings, 'أقل من الصغرى')).toBe(true);
+  });
+
+  it('غياب الحقول لا يحجب اليوم', () => {
+    const payload = fixture();
+    delete (payload.daily as Record<string, unknown>).temperature_2m_max;
+    delete payload.daily_units.temperature_2m_max;
+    const forecast = normalize(payload);
+    expect(forecast.days).toHaveLength(7);
+    expect(forecast.days[0].temperatureMaxC).toBeNull();
+    expect(forecast.days[0].temperatureMinC).toBe(31.4);
+  });
+});
+
 describe('اليوم ناقص الساعات', () => {
   it('ينبّه دون إسقاط اليوم', () => {
     const payload = fixture();

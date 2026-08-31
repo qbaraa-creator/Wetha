@@ -98,6 +98,21 @@ describe('تخزين التوقع ومسارات السقوط الآمن', () =>
     expect(await loadForecast(LOCATION.id)).toEqual(record);
   });
 
+  it.each([
+    [999, 31],
+    [20, 35]
+  ])('يرفض الحرارة التالفة من كلا المخزنين: %s / %s', async (max, min) => {
+    const valid = storedForecast();
+    const corrupt = storedForecast();
+    corrupt.forecast.days[0].temperatureMaxC = max;
+    corrupt.forecast.days[0].temperatureMinC = min;
+    await seedIndexedDb(corrupt);
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(valid));
+    expect(await loadForecast(LOCATION.id)).toEqual(valid);
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(corrupt));
+    expect(await loadForecast(LOCATION.id)).toBeNull();
+  });
+
   it('يستعيد localStorage إن لم يوجد السجل في IndexedDB', async () => {
     const record = storedForecast();
     localStorage.setItem(LOCAL_KEY, JSON.stringify(record));

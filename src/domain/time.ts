@@ -112,6 +112,17 @@ export function formatHour12(hour: number, minute = 0): string {
   return `${display}:${String(minute).padStart(2, '0')} ${suffix}`;
 }
 
+/**
+ * صيغة مضغوطة للساعة بلا دقائق: «12ص» و«4م».
+ * تُستعمل حيث تتزاحم الأرقام في صف واحد ولا تضيف الدقائق الصفرية معنى.
+ */
+export function formatHourCompact(hour: number): string {
+  const normalized = ((hour % 24) + 24) % 24;
+  const suffix = normalized < 12 ? 'ص' : 'م';
+  const display = normalized % 12 === 0 ? 12 : normalized % 12;
+  return `${display}${suffix}`;
+}
+
 export function formatIsoTime(timeIso: string | null): string {
   if (!timeIso) return '—';
   return formatHour12(isoHourPart(timeIso), isoMinutePart(timeIso));

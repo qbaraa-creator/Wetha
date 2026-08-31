@@ -23,6 +23,14 @@ export function Legend() {
 
       {open ? (
         <div className="legend__body">
+          <div className="legend__group legend__group--reading">
+            <h3>قراءة فترات اليوم</h3>
+            <p className="legend__note">
+              رقم الرياح هو أدنى وأعلى سرعة في الفترة، ورقم الرطوبة هو متوسطها. لون كل مؤشر يمثل
+              الحالة الأكثر تكرارًا بين ساعاته الصالحة، وليس تصنيف المتوسط؛ والتعادل للأشد. قد تختلف
+              حالة بعض الساعات، وتجدها في التفاصيل. الفترة ذات الحدود المتقطعة انقضت.
+            </p>
+          </div>
           <div className="legend__group">
             <h3>لون اتجاه الرياح</h3>
             <ul>

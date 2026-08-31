@@ -35,6 +35,9 @@ export const HUMIDITY_THRESHOLDS = {
   redMinInclusive: 65
 } as const;
 
+/** حدود صلاحية الحرارة بالمئوية؛ مشتركة بين المزود والتخزين، وليست عتبات راحة. */
+export const TEMPERATURE_LIMITS_C = { min: -90, max: 60 } as const;
+
 /** القسم 5.1 — لون كل قطاع من القطاعات الثمانية. */
 export const DIRECTION_SEVERITY: Record<DirectionCode, Severity> = {
   N: 'green',
@@ -56,6 +59,23 @@ export const DOMINANT_DIRECTION_MIN_SHARE = 0.5;
 /** القسم 5.6 — أقل عدد ساعات متتالية يثبّت تحول الاتجاه. */
 export const DIRECTION_CHANGE_MIN_HOURS = 2;
 
+/**
+ * فترات اليوم التي تُعرض في الطبقة الأولى من بطاقة اليوم.
+ *
+ * لا تتداخل ولا تلتف حول منتصف الليل: كل ساعة من 0 إلى 23 تقع في فترة واحدة
+ * بالضبط، فيبقى الترتيب المعروض هو الترتيب الزمني ولا تظهر ساعات أول اليوم
+ * في آخر القائمة. الحدود مختارة لسؤال «متى أخرج؟» لا لتقسيم فلكي.
+ */
+export const DAY_PARTS = [
+  { id: 'dawn', labelAr: 'فجر', startHour: 0, endHourExclusive: 6 },
+  { id: 'morning', labelAr: 'صباح', startHour: 6, endHourExclusive: 12 },
+  { id: 'noon', labelAr: 'ظهر', startHour: 12, endHourExclusive: 16 },
+  { id: 'afternoon', labelAr: 'عصر', startHour: 16, endHourExclusive: 19 },
+  { id: 'night', labelAr: 'ليل', startHour: 19, endHourExclusive: 24 }
+] as const;
+
+export type DayPartId = (typeof DAY_PARTS)[number]['id'];
+
 /** القسم 15.1 — سياسة التحديث. */
 export const REFRESH_POLICY = {
   staleAfterMs: 30 * 60 * 1000,
@@ -63,8 +83,8 @@ export const REFRESH_POLICY = {
   maxRetries: 1
 } as const;
 
-/** زيد لأن السجل القديم يحمل حالات محسوبة بالعتبات السابقة. */
-export const STORAGE_SCHEMA_VERSION = 2;
+/** الإصدار 3 يضيف العظمى والصغرى واحتمال الهطول؛ لا يتغير لمجرد تشديد التحقق. */
+export const STORAGE_SCHEMA_VERSION = 3;
 
 export const SEVERITY_SHORT_LABELS: Record<Severity, string> = {
   green: 'أخضر',

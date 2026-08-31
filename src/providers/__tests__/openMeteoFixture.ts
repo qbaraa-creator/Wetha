@@ -21,7 +21,10 @@ export function fixture() {
       sunrise: 'iso8601',
       sunset: 'iso8601',
       moon_phase: 'fraction',
-      wind_direction_10m_dominant: '°'
+      wind_direction_10m_dominant: '°',
+      temperature_2m_max: '°C',
+      temperature_2m_min: '°C',
+      precipitation_probability_max: '%'
     } as Record<string, string>,
     current_units: {
       relative_humidity_2m: '%',
@@ -50,7 +53,10 @@ export function fixture() {
       moon_phase: DATES.map(() => 0.227) as Array<number | null>,
       wind_speed_10m_max: DATES.map(() => 20),
       wind_gusts_10m_max: DATES.map(() => 31),
-      wind_direction_10m_dominant: DATES.map(() => 331) as Array<number | null>
+      wind_direction_10m_dominant: DATES.map(() => 331) as Array<number | null>,
+      temperature_2m_max: DATES.map(() => 38.3) as Array<number | null>,
+      temperature_2m_min: DATES.map(() => 31.4) as Array<number | null>,
+      precipitation_probability_max: DATES.map(() => 0) as Array<number | null>
     }
   };
 }

@@ -126,8 +126,62 @@ describe('صفحة الأسبوع', () => {
     );
     await user.tab();
     expect(days).toHaveFocus();
+    // الشريط الساعي انتقل داخل لوحة التفاصيل، فالمحطة التالية هي فاتح اللوحة
+    // لا الشريط نفسه.
     await user.tab();
-    expect(screen.getAllByRole('listbox')[0]).toHaveFocus();
+    expect(document.activeElement?.tagName.toLowerCase()).toBe('summary');
+    expect(document.activeElement).toHaveTextContent(/^تفاصيل/);
+  });
+
+  it('يضع الشريط الساعي داخل لوحة التفاصيل لا في الطبقة الأولى', () => {
+    const forecast = makeTestForecast();
+    const { container } = render(
+      <WeekPage forecast={forecast} ranking={rankWeek(forecast.days)} now={now} />
+    );
+
+    // jsdom لا يخفي محتوى <details> المغلق، فيُتحقق من موضع الشريط في الشجرة
+    // بدل الاعتماد على ظهوره — والمتصفح هو من يخرجه من ترتيب Tab.
+    const bars = container.querySelectorAll('.hourbar');
+    expect(bars.length).toBeGreaterThan(0);
+    bars.forEach((bar) => expect(bar.closest('details')).not.toBeNull());
+    // الطبقة الأولى صارت صفوف الفترات
+    expect(container.querySelectorAll('.day-row__parts .daypart').length).toBe(
+      forecast.days.length * 5
+    );
+  });
+
+  it('يشرح الفرق بين الرقم واللون مرة واحدة ويسمي المتوسط ووحدة السرعة', () => {
+    const forecast = makeTestForecast();
+    render(<WeekPage forecast={forecast} ranking={rankWeek(forecast.days)} now={now} />);
+    expect(screen.getAllByText(/^الأرقام: مدى سرعة الرياح ومتوسط الرطوبة/)).toHaveLength(1);
+    expect(screen.getAllByText('المتوسط')).toHaveLength(7);
+    expect(screen.getAllByText('مدى · كم/س')).toHaveLength(7);
+  });
+
+  it('يشرح الأكثر تكرارًا والتعادل وحدود الماضي داخل مفتاح القراءة', async () => {
+    vi.useRealTimers();
+    const user = userEvent.setup();
+    const forecast = makeTestForecast();
+    render(<WeekPage forecast={forecast} ranking={rankWeek(forecast.days)} now={now} />);
+    await user.click(screen.getByRole('button', { name: 'مفتاح الألوان وكيفية القراءة' }));
+    expect(screen.getByRole('heading', { name: 'قراءة فترات اليوم' })).toBeVisible();
+    expect(screen.getByText(/الفترة ذات الحدود المتقطعة انقضت/)).toHaveTextContent(
+      'والتعادل للأشد'
+    );
+  });
+
+  it.each([null, 0, 45, 100])('يظهر احتمال المطر فقط إن كان موجبًا: %s', (probability) => {
+    const forecast = makeTestForecast();
+    forecast.days.forEach((day) => {
+      day.precipitationProbabilityMax = null;
+    });
+    forecast.days[0].precipitationProbabilityMax = probability;
+    const { container } = render(
+      <WeekPage forecast={forecast} ranking={rankWeek(forecast.days)} now={now} />
+    );
+    const badges = container.querySelectorAll('.day-row__rain');
+    expect(badges).toHaveLength(probability !== null && probability > 0 ? 1 : 0);
+    if (badges.length) expect(badges[0]).toHaveTextContent(`${probability}%`);
   });
 
   it('يمرر بطاقة كاملة بالأسهم ويصل للطرفين وفق RTL بلا اعتراض التمرير الرأسي', () => {

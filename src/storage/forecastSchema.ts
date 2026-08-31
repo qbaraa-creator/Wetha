@@ -1,4 +1,4 @@
-import { STORAGE_SCHEMA_VERSION } from '../config/appConfig';
+import { STORAGE_SCHEMA_VERSION, TEMPERATURE_LIMITS_C } from '../config/appConfig';
 import { isValidDateIso, isValidHourIso, isValidInstantIso } from '../domain/time';
 import type {
   CurrentConditions,
@@ -35,6 +35,10 @@ const isFiniteNumber = (value: unknown): value is number =>
 
 const isNullableNumber = (value: unknown): value is number | null =>
   value === null || isFiniteNumber(value);
+
+const isNullableTemperature = (value: unknown): value is number | null =>
+  value === null ||
+  (isFiniteNumber(value) && value >= TEMPERATURE_LIMITS_C.min && value <= TEMPERATURE_LIMITS_C.max);
 
 const isNullableHourIso = (value: unknown): value is string | null =>
   value === null || isValidHourIso(value);
@@ -160,6 +164,15 @@ function isDailySummary(value: unknown): value is DailySummary {
     isNullableHourIso(value.humidityMinTimeIso) &&
     isNullableHourIso(value.humidityMaxTimeIso) &&
     isSeverityCounts(value.humidityHoursBySeverity) &&
+    isNullableTemperature(value.temperatureMaxC) &&
+    isNullableTemperature(value.temperatureMinC) &&
+    (value.temperatureMaxC === null ||
+      value.temperatureMinC === null ||
+      value.temperatureMaxC >= value.temperatureMinC) &&
+    (value.precipitationProbabilityMax === null ||
+      (isFiniteNumber(value.precipitationProbabilityMax) &&
+        value.precipitationProbabilityMax >= 0 &&
+        value.precipitationProbabilityMax <= 100)) &&
     isNullableHourIso(value.sunriseIso) &&
     isNullableHourIso(value.sunsetIso) &&
     (value.moonPhaseIndex === null ||

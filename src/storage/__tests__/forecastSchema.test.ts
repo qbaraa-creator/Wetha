@@ -212,3 +212,39 @@ describe('isNormalizedForecast مستقلًا', () => {
     expect(isNormalizedForecast({ days: [{}], locationId: 'jeddah' })).toBe(false);
   });
 });
+
+describe('الحرارة المحفوظة — المجال واتساق العظمى والصغرى', () => {
+  it.each(['temperatureMaxC', 'temperatureMinC'])(
+    'يرفض %s إذا كانت خارج المجال أو غير رقمية',
+    (field) => {
+      for (const value of [-90.1, 60.1, 999, Number.NaN, Infinity, -Infinity, '38', undefined]) {
+        expect(
+          parseStoredForecast(corrupt(`forecast.days.0.${field}`, value), LOCATION.id)
+        ).toBeNull();
+      }
+    }
+  );
+
+  it('يرفض العظمى الأقل من الصغرى عبر مدقق التوقع وغلاف التخزين', () => {
+    const record = storedRecord();
+    const forecast = record.forecast as NormalizedForecast;
+    forecast.days[0].temperatureMaxC = 20;
+    forecast.days[0].temperatureMinC = 35;
+    expect(isNormalizedForecast(forecast)).toBe(false);
+    expect(parseStoredForecast(record, LOCATION.id)).toBeNull();
+  });
+
+  it.each([
+    [60, -90],
+    [20, 20],
+    [null, null],
+    [38, null],
+    [null, 31]
+  ])('يقبل الحدود والقيم المفقودة الصحيحة: عظمى %s وصغرى %s', (max, min) => {
+    const record = storedRecord();
+    const day = (record.forecast as NormalizedForecast).days[0];
+    day.temperatureMaxC = max;
+    day.temperatureMinC = min;
+    expect(parseStoredForecast(record, LOCATION.id)).not.toBeNull();
+  });
+});

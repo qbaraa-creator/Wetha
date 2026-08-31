@@ -14,9 +14,20 @@ function luminance(token: string): number {
     .reduce((total, channel, index) => total + channel * [0.2126, 0.7152, 0.0722][index], 0);
 }
 
-describe.each(['green-base', 'orange-base', 'red-base', 'ink-muted'])('تباين النص %s', (text) => {
-  it.each(['card', 'card-soft', 'page', 'orange-surface'])('يعبر AA على %s', (surface) => {
-    const [lighter, darker] = [luminance(text), luminance(surface)].sort((a, b) => b - a);
-    expect((lighter + 0.05) / (darker + 0.05)).toBeGreaterThanOrEqual(4.5);
-  });
+describe.each(['green-base', 'orange-base', 'red-base', 'ink-muted', 'wind-ink', 'humidity-ink'])(
+  'تباين النص %s',
+  (text) => {
+    it.each(['card', 'card-soft', 'page', 'orange-surface'])('يعبر AA على %s', (surface) => {
+      const [lighter, darker] = [luminance(text), luminance(surface)].sort((a, b) => b - a);
+      expect((lighter + 0.05) / (darker + 0.05)).toBeGreaterThanOrEqual(4.5);
+    });
+  }
+);
+
+it('لا يخفض تباين الفترات المنقضية بالشفافية أو المرشحات', () => {
+  const pastRule = stylesheet.match(/\.daypart\.is-past\s*\{([^}]+)\}/)?.[1];
+  expect(pastRule).toBeDefined();
+  expect(pastRule).toMatch(/opacity:\s*1\s*;/);
+  expect(pastRule).toMatch(/filter:\s*none\s*;/);
+  expect(pastRule).toMatch(/border-style:\s*dashed\s*;/);
 });

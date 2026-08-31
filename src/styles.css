@@ -18,6 +18,17 @@
   --page: #f4f7fa;
   --card: #ffffff;
   --card-soft: #f8fafc;
+  /*
+   * هوية المؤشر منفصلة عن لوحة الحالة عمدًا.
+   * أخضر/برتقالي/أحمر محجوزة لمعنى واحد: مناسب أو لا. لو صبغنا الرياح
+   * والرطوبة بلونين مختلفين لضاع هذا المعنى، فالتمييز يأتي من الأيقونة
+   * والحدّ الملوّن بينما يبقى لون الحالة هو الذي يُقرأ من نظرة.
+   */
+  --wind-ink: #275f87;
+  --wind-surface: #e8f2f8;
+  --humidity-ink: #12707e;
+  --humidity-surface: #e4f4f6;
+
   --brand: #275f87;
   --brand-strong: #17496f;
   --brand-surface: #e8f2f8;
@@ -407,6 +418,12 @@ button {
   font-size: var(--text-min);
 }
 
+.green-outlook__days:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: var(--radius);
+}
+
 .green-outlook__days {
   position: relative;
   display: grid;
@@ -547,7 +564,7 @@ button {
   min-width: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-areas: 'head' 'facts' 'map' 'more';
+  grid-template-areas: 'head' 'facts' 'parts' 'more';
   gap: 10px;
   padding: 13px;
   border: 1px solid var(--line-soft);
@@ -576,8 +593,8 @@ button {
 .day-row__facts {
   grid-area: facts;
 }
-.day-row__map {
-  grid-area: map;
+.day-row__parts {
+  grid-area: parts;
 }
 .day-row__details {
   grid-area: more;
@@ -616,6 +633,52 @@ button {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
+}
+
+.day-row__headline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-inline-start: auto;
+}
+
+.day-row__temp,
+.day-row__rain {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: max(var(--text-min), 0.92rem);
+  font-weight: 730;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.day-row__temp svg {
+  color: var(--orange-base);
+}
+
+.day-row__temp-sep {
+  /* لون حدود لا يصلح نصًا: الفاصل يبقى مرئيًا بلون نص خافت مطابق للتباين. */
+  color: var(--ink-muted);
+  font-weight: 400;
+}
+
+.day-row__temp-min {
+  color: var(--ink-muted);
+  font-weight: 650;
+}
+
+.day-row__rain {
+  padding: 2px 8px;
+  border: 1px solid #a9cfe0;
+  border-radius: 999px;
+  background: var(--wind-surface);
+  color: var(--wind-ink);
+  font-size: max(var(--text-min), 0.82rem);
+}
+
+.day-row__rain svg {
+  color: var(--wind-ink);
 }
 
 .chip {
@@ -673,6 +736,30 @@ button {
   color: var(--ink-muted);
 }
 
+.day-row__gust {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 7px 10px;
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  background: var(--card-soft);
+  font-size: max(var(--text-min), 0.85rem);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.day-row__gust svg {
+  align-self: center;
+  color: var(--wind-ink);
+}
+
+.day-row__gust-label,
+.day-row__gust small {
+  color: var(--ink-muted);
+  font-weight: 500;
+}
+
 .day-row__stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -700,10 +787,10 @@ button {
 
 .day-row__stat dt svg {
   flex: 0 0 auto;
-  color: var(--brand);
+  color: var(--wind-ink);
 }
 .day-row__stat:nth-child(3) dt svg {
-  color: #157c8c;
+  color: var(--humidity-ink);
 }
 
 .day-row__stat dd {
@@ -745,10 +832,10 @@ button {
 }
 
 .day-row__map-head > span:first-child svg {
-  color: var(--brand);
+  color: var(--wind-ink);
 }
 .day-row__map-head > span:nth-child(2) svg {
-  color: #157c8c;
+  color: var(--humidity-ink);
 }
 .day-row__map-head small {
   margin-inline-start: auto;
@@ -766,6 +853,159 @@ button {
 }
 .lane-mark--humidity {
   opacity: 0.55;
+}
+
+/* ————— فترات اليوم: الطبقة الأولى في بطاقة اليوم ————— */
+
+.week-reading-note {
+  padding-inline: 4px;
+  color: var(--ink-muted);
+  font-size: max(var(--text-min), 0.82rem);
+}
+
+.legend__group--reading {
+  grid-column: 1 / -1;
+}
+
+.day-row__parts {
+  min-width: 0;
+}
+
+.day-row__parts-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 86px 68px;
+  gap: 6px;
+  padding: 0 11px 5px;
+  color: var(--ink-muted);
+  font-size: var(--text-min);
+  font-weight: 650;
+}
+
+.day-row__parts-head > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.day-row__parts-head > .daypart__metric {
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0;
+}
+
+.day-row__parts-head .daypart__metric > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.day-row__parts-head .daypart__metric--wind {
+  color: var(--wind-ink);
+}
+.day-row__parts-head .daypart__metric--humidity {
+  color: var(--humidity-ink);
+}
+
+.dayparts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/*
+ * صف قراءة غير تفاعلي؛ لكل مؤشر رمز حالة مستقل بجانب الرقم.
+ * الماضي يُميّز بالخلفية والحد المتقطع، دون إضعاف تباين النص أو رموز الحالة.
+ */
+.daypart {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 86px 68px;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  background: var(--card-soft);
+}
+
+.daypart.is-past {
+  opacity: 1;
+  filter: none;
+  background: var(--card);
+  border-color: var(--line);
+  border-style: dashed;
+}
+
+.daypart.is-empty {
+  background: var(--card-soft);
+}
+
+.daypart__when {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 6px;
+  font-size: max(var(--text-min), 0.82rem);
+}
+
+/* نقطة الحالة تسبق رقم كل مؤشر، فيبقى المساران مقروءين مستقلين. */
+.daypart__dot {
+  flex: 0 0 auto;
+  font-size: var(--text-min);
+  line-height: 1;
+}
+
+.daypart__dot--green {
+  color: var(--green-base);
+}
+.daypart__dot--orange {
+  color: var(--orange-base);
+}
+.daypart__dot--red {
+  color: var(--red-base);
+}
+.daypart__dot--none {
+  color: var(--neutral-base);
+}
+
+.daypart__label {
+  flex: 0 0 auto;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.daypart__when .timerange {
+  color: var(--ink-muted);
+  font-size: var(--text-min);
+  white-space: nowrap;
+}
+
+.daypart__metric {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 4px;
+  font-size: max(var(--text-min), 0.86rem);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.daypart__metric small {
+  font-size: var(--text-min);
+  font-weight: 500;
+}
+
+.daypart__metric--wind {
+  color: var(--wind-ink);
+}
+.daypart__metric--humidity {
+  color: var(--humidity-ink);
 }
 
 /* التفاصيل داخل البطاقة */
@@ -836,10 +1076,13 @@ button {
 }
 
 .day-row__detail-group h3 svg {
-  color: var(--brand);
+  color: var(--wind-ink);
 }
-.day-row__detail-group:nth-child(2) h3 svg {
-  color: #157c8c;
+.day-row__detail-group--wide h3 svg {
+  color: var(--ink-muted);
+}
+.day-row__detail-group:nth-child(3) h3 svg {
+  color: var(--humidity-ink);
 }
 
 .day-row__narrative {
@@ -1258,7 +1501,7 @@ button {
 
   .day-row {
     grid-template-columns: minmax(155px, 200px) minmax(0, 1fr);
-    grid-template-areas: 'head facts' 'map map' 'more more';
+    grid-template-areas: 'head facts' 'parts parts' 'more more';
     gap: 12px 18px;
   }
 
@@ -1296,8 +1539,8 @@ button {
   }
 
   .day-row {
-    grid-template-columns: 185px 335px minmax(0, 1fr);
-    grid-template-areas: 'head facts map' 'more more more';
+    grid-template-columns: 175px 250px minmax(0, 1fr);
+    grid-template-areas: 'head facts parts' 'more more more';
     align-items: start;
   }
 

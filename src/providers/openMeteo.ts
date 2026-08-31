@@ -1,4 +1,9 @@
-import { DIRECTION_SECTORS, FORECAST_DAYS, type LocationConfig } from '../config/appConfig';
+import {
+  DIRECTION_SECTORS,
+  FORECAST_DAYS,
+  TEMPERATURE_LIMITS_C,
+  type LocationConfig
+} from '../config/appConfig';
 import { buildHourlyPoint } from '../domain/segments';
 import { buildDailySummary } from '../domain/summary';
 import { moonPhaseIndex } from '../domain/moon';
@@ -29,7 +34,10 @@ const DAILY_FIELDS = [
   'moon_phase',
   'wind_speed_10m_max',
   'wind_gusts_10m_max',
-  'wind_direction_10m_dominant'
+  'wind_direction_10m_dominant',
+  'temperature_2m_max',
+  'temperature_2m_min',
+  'precipitation_probability_max'
 ] as const;
 
 const CURRENT_FIELDS = [
@@ -51,7 +59,10 @@ const EXPECTED_DAILY_UNITS: Record<string, string> = {
   sunrise: 'iso8601',
   sunset: 'iso8601',
   moon_phase: 'fraction',
-  wind_direction_10m_dominant: '°'
+  wind_direction_10m_dominant: '°',
+  temperature_2m_max: '°C',
+  temperature_2m_min: '°C',
+  precipitation_probability_max: '%'
 };
 
 /** وحدات `current` تُفحص مستقلة: المزود يصفها في كتلة خاصة قد تنحرف وحدها. */
@@ -71,7 +82,11 @@ const RANGES = {
   speed: (value: number) => value >= 0,
   gust: (value: number) => value >= 0,
   degree: (value: number) => value >= 0 && value <= 360,
-  moonPhase: (value: number) => value >= 0 && value <= 1
+  moonPhase: (value: number) => value >= 0 && value <= 1,
+  /* مجال أرضي واسع عمدًا: الهدف رفض الوحدة الخاطئة أو القيمة التالفة لا تصحيح المناخ. */
+  temperature: (value: number) =>
+    value >= TEMPERATURE_LIMITS_C.min && value <= TEMPERATURE_LIMITS_C.max,
+  probability: (value: number) => value >= 0 && value <= 100
 } as const;
 
 type NumberArray = Array<number | null>;
@@ -366,6 +381,34 @@ export function normalizeOpenMeteoResponse(
     warnings
   );
 
+  const temperatureMax = readNumbers(
+    payload.daily,
+    'temperature_2m_max',
+    rejectedDaily,
+    dailyAxis,
+    RANGES.temperature,
+    'daily',
+    warnings
+  );
+  const temperatureMin = readNumbers(
+    payload.daily,
+    'temperature_2m_min',
+    rejectedDaily,
+    dailyAxis,
+    RANGES.temperature,
+    'daily',
+    warnings
+  );
+  const rainProbability = readNumbers(
+    payload.daily,
+    'precipitation_probability_max',
+    rejectedDaily,
+    dailyAxis,
+    RANGES.probability,
+    'daily',
+    warnings
+  );
+
   const days: DailySummary[] = dailyAxis.times.map((date, index) => {
     const points = (pointsByDate.get(date) ?? []).sort((a, b) => a.localHour - b.localHour);
     if (points.length < 24) {
@@ -373,12 +416,29 @@ export function normalizeOpenMeteoResponse(
     }
     const phase = moonPhase[index];
     const providerDegree = dominantDegree[index];
-    return buildDailySummary(date, points, {
-      sunriseIso: sunrise[index],
-      sunsetIso: sunset[index],
-      moonPhaseIndex: phase === null ? null : moonPhaseIndex(phase),
-      providerDominantDirection: providerDegree === null ? null : degreeToDirection(providerDegree)
-    });
+    const maxC = temperatureMax[index];
+    const minC = temperatureMin[index];
+    if (maxC !== null && minC !== null && maxC < minC) {
+      warnings.push(`اليوم ${date}: العظمى ${maxC}° أقل من الصغرى ${minC}° فأُفرغت الاثنتان.`);
+    }
+    const swapped = maxC !== null && minC !== null && maxC < minC;
+
+    return buildDailySummary(
+      date,
+      points,
+      {
+        sunriseIso: sunrise[index],
+        sunsetIso: sunset[index],
+        moonPhaseIndex: phase === null ? null : moonPhaseIndex(phase),
+        providerDominantDirection:
+          providerDegree === null ? null : degreeToDirection(providerDegree)
+      },
+      {
+        temperatureMaxC: swapped ? null : maxC,
+        temperatureMinC: swapped ? null : minC,
+        precipitationProbabilityMax: rainProbability[index]
+      }
+    );
   });
 
   /*

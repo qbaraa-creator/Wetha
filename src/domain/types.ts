@@ -73,6 +73,11 @@ export interface DailySummary {
   windSegments: TimeSegment[];
   humiditySegments: TimeSegment[];
   directionSegments: DirectionSegment[];
+  /** العظمى والصغرى بالدرجة المئوية — عرض فقط، لا تدخل أي تصنيف لون. */
+  temperatureMaxC: number | null;
+  temperatureMinC: number | null;
+  /** أعلى احتمال هطول في اليوم بالنسبة المئوية؛ يُخفى عند الصفر. */
+  precipitationProbabilityMax: number | null;
   sunriseIso: string | null;
   sunsetIso: string | null;
   moonPhaseIndex: number | null;

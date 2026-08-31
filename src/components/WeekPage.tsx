@@ -1,10 +1,10 @@
 import type { KeyboardEvent } from 'react';
 import {
   displayNumber,
-  displayRange,
   formatDirectionNarrative,
   formatDominantDirection
 } from '../domain/narrative';
+import { summarizeDayParts } from '../domain/dayParts';
 import { moonPhaseName } from '../domain/moon';
 import { findOutdoorActivityWindows, type ActivityWindow } from '../domain/outdoorActivity';
 import {
@@ -16,19 +16,23 @@ import {
 } from '../domain/time';
 import { getCombinedDirectionSeverity } from '../domain/wind';
 import type { DailySummary, NormalizedForecast, WeekRanking } from '../domain/types';
+import { DayPartList } from './DayParts';
 import { HourBar } from './HourBar';
 import { Legend } from './Legend';
 import { Num, TimeRange } from './Num';
 import { SeverityBadge, SeverityCounts } from './SeverityBadge';
 import {
   ChevronIcon,
+  ClockIcon,
   CompassIcon,
   DropletIcon,
   GustIcon,
   InfoIcon,
   MoonIcon,
+  RainIcon,
   SparklesIcon,
   SunIcon,
+  ThermometerIcon,
   WindIcon
 } from './icons';
 
@@ -206,6 +210,10 @@ export function WeekPage({ forecast, ranking, now }: WeekPageProps) {
         </div>
       </section>
 
+      <p className="week-reading-note">
+        الأرقام: مدى سرعة الرياح ومتوسط الرطوبة. اللون: الحالة الأكثر تكرارًا بين ساعات الفترة، وليس
+        لون المتوسط؛ والتعادل للأشد.
+      </p>
       <div className="week-days">
         {days.map((day) => (
           <DayRow
@@ -241,6 +249,9 @@ function DayRow({ day, isToday, nowHour, isMostHumid, isLeastHumid }: DayRowProp
   const dayName = arabicDayName(day.date);
   const dateText = formatDateDMY(day.date);
   const dimBefore = nowHour === null ? null : Math.floor(nowHour);
+  const parts = summarizeDayParts(day.hours, nowHour);
+  // احتمال صفر هو الحال الغالب في جدة؛ مؤشر دائم عند الصفر ضجيج لا معلومة.
+  const showRain = (day.precipitationProbabilityMax ?? 0) > 0;
 
   return (
     <article className={`day-row${isToday ? ' day-row--today' : ''}`}>
@@ -259,6 +270,31 @@ function DayRow({ day, isToday, nowHour, isMostHumid, isLeastHumid }: DayRowProp
             <Num>{dateText}</Num>
           </span>
         </div>
+        <div className="day-row__headline">
+          <p className="day-row__temp">
+            <ThermometerIcon size={16} />
+            <span className="sr-only">العظمى والصغرى:</span>
+            <Num>
+              {day.temperatureMaxC === null ? '—' : `${displayNumber(day.temperatureMaxC)}°`}
+            </Num>
+            <span className="day-row__temp-sep" aria-hidden="true">
+              /
+            </span>
+            <span className="day-row__temp-min">
+              <Num>
+                {day.temperatureMinC === null ? '—' : `${displayNumber(day.temperatureMinC)}°`}
+              </Num>
+            </span>
+          </p>
+          {showRain ? (
+            <p className="day-row__rain">
+              <RainIcon size={16} />
+              <span className="sr-only">احتمال هطول:</span>
+              <Num>{displayNumber(day.precipitationProbabilityMax)}%</Num>
+            </p>
+          ) : null}
+        </div>
+
         <div className="day-row__flags">
           {isMostHumid ? <span className="chip chip--most">الأكثر رطوبة</span> : null}
           {isLeastHumid ? <span className="chip chip--least">الأقل رطوبة</span> : null}
@@ -278,53 +314,38 @@ function DayRow({ day, isToday, nowHour, isMostHumid, isLeastHumid }: DayRowProp
           />
         </p>
 
-        <dl className="day-row__stats">
-          <div className="day-row__stat">
-            <dt>
-              <WindIcon size={16} /> السرعة
-            </dt>
-            <dd>
-              <Num>{displayRange(day.windMinKmh, day.windMaxKmh)}</Num> <small>كم/س</small>
-            </dd>
-          </div>
-          <div className="day-row__stat">
-            <dt>
-              <GustIcon size={16} /> أعلى هبّة
-            </dt>
-            <dd>
-              <Num>{displayNumber(day.gustMaxKmh)}</Num> <small>كم/س</small>
-              {day.gustMaxTimeIso ? <small> · {formatIsoTime(day.gustMaxTimeIso)}</small> : null}
-            </dd>
-          </div>
-          <div className="day-row__stat">
-            <dt>
-              <DropletIcon size={16} /> متوسط الرطوبة
-            </dt>
-            <dd>
-              <Num>{displayNumber(day.humidityMean)}%</Num>
-            </dd>
-          </div>
-        </dl>
+        {/*
+          السرعة ومتوسط الرطوبة كانا هنا لأن الشريط اللوني لم يحمل أي رقم.
+          صفوف الفترات صارت تعطيهما بدقة أعلى، فبقاؤهما تكرار. الهبّة القصوى
+          وحدها لا تُشتق من الفترات فتبقى ظاهرة.
+        */}
+        <p className="day-row__gust">
+          <GustIcon size={16} />
+          <span className="day-row__gust-label">أعلى هبّة</span>
+          <Num>{displayNumber(day.gustMaxKmh)}</Num> <small>كم/س</small>
+          {day.gustMaxTimeIso ? (
+            <small className="day-row__gust-at"> · {formatIsoTime(day.gustMaxTimeIso)}</small>
+          ) : null}
+        </p>
       </div>
 
-      {/* شريط واحد بطبقتين: الأعلى للرياح والأسفل للرطوبة. */}
-      <div className={`day-row__map${nowHour !== null ? ' day-row__map--has-now' : ''}`}>
-        <div className="day-row__map-head" aria-hidden="true">
-          <span>
-            <WindIcon size={15} /> رياح <i className="lane-mark lane-mark--wind" />
+      <div className="day-row__parts">
+        <div className="day-row__parts-head" aria-hidden="true">
+          <span className="daypart__when">الفترة</span>
+          <span className="daypart__metric daypart__metric--wind">
+            <span>
+              <WindIcon size={14} /> رياح
+            </span>
+            <small>مدى · كم/س</small>
           </span>
-          <span>
-            <DropletIcon size={15} /> رطوبة <i className="lane-mark lane-mark--humidity" />
+          <span className="daypart__metric daypart__metric--humidity">
+            <span>
+              <DropletIcon size={14} /> رطوبة
+            </span>
+            <small>المتوسط</small>
           </span>
-          <small>اسحب على الشريط لقراءة الساعة</small>
         </div>
-        <HourBar
-          hours={day.hours}
-          label={`شريط الرياح والرطوبة الساعي ليوم ${dayName} ${dateText}`}
-          nowHour={nowHour}
-          dimBefore={dimBefore}
-          showAxis
-        />
+        <DayPartList parts={parts} />
       </div>
 
       <details className="day-row__details">
@@ -335,6 +356,30 @@ function DayRow({ day, isToday, nowHour, isMostHumid, isLeastHumid }: DayRowProp
           <ChevronIcon size={18} />
         </summary>
         <div className="day-row__details-body">
+          <div className="day-row__detail-group day-row__detail-group--wide">
+            <h3>
+              <ClockIcon size={16} /> الساعات بالتفصيل
+            </h3>
+            <div className={`day-row__map${nowHour !== null ? ' day-row__map--has-now' : ''}`}>
+              <div className="day-row__map-head" aria-hidden="true">
+                <span>
+                  <WindIcon size={15} /> رياح <i className="lane-mark lane-mark--wind" />
+                </span>
+                <span>
+                  <DropletIcon size={15} /> رطوبة <i className="lane-mark lane-mark--humidity" />
+                </span>
+                <small>اسحب على الشريط لقراءة الساعة</small>
+              </div>
+              <HourBar
+                hours={day.hours}
+                label={`شريط الرياح والرطوبة الساعي ليوم ${dayName} ${dateText}`}
+                nowHour={nowHour}
+                dimBefore={dimBefore}
+                showAxis
+              />
+            </div>
+          </div>
+
           <div className="day-row__detail-group">
             <h3>
               <WindIcon size={16} /> ساعات الرياح

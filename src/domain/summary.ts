@@ -58,11 +58,25 @@ export interface AstronomyInput {
   providerDominantDirection: DirectionCode | null;
 }
 
+/** حقول يومية تُعرض كما وصلت بلا اشتقاق: الحرارة واحتمال الهطول. */
+export interface DailyMeasuresInput {
+  temperatureMaxC: number | null;
+  temperatureMinC: number | null;
+  precipitationProbabilityMax: number | null;
+}
+
+const EMPTY_MEASURES: DailyMeasuresInput = {
+  temperatureMaxC: null,
+  temperatureMinC: null,
+  precipitationProbabilityMax: null
+};
+
 /** القسمان 6.3 و10.3 — ملخص اليوم الكامل. القيم المفقودة لا تدخل أي متوسط أو مقارنة. */
 export function buildDailySummary(
   date: string,
   rawPoints: HourlyWeatherPoint[],
-  astronomy: AstronomyInput
+  astronomy: AstronomyInput,
+  measures: DailyMeasuresInput = EMPTY_MEASURES
 ): DailySummary {
   const hours = smoothDirectionJitter(rawPoints);
 
@@ -128,6 +142,9 @@ export function buildDailySummary(
     windSegments: buildWindSegments(hours),
     humiditySegments: buildHumiditySegments(hours),
     directionSegments: buildDirectionSegments(hours),
+    temperatureMaxC: measures.temperatureMaxC,
+    temperatureMinC: measures.temperatureMinC,
+    precipitationProbabilityMax: measures.precipitationProbabilityMax,
     sunriseIso: astronomy.sunriseIso,
     sunsetIso: astronomy.sunsetIso,
     moonPhaseIndex: astronomy.moonPhaseIndex,

@@ -123,6 +123,23 @@ export function SunIcon({ setting = false, ...props }: UiIconProps & { setting?:
   );
 }
 
+export function ThermometerIcon(props: UiIconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M14 14.76V4.5a2.5 2.5 0 0 0-5 0v10.26a4.5 4.5 0 1 0 5 0Z" />
+    </SvgIcon>
+  );
+}
+
+export function RainIcon(props: UiIconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M17.5 15.5a4.5 4.5 0 0 0-.9-8.92 6 6 0 0 0-11.44 1.6A3.75 3.75 0 0 0 6 15.5" />
+      <path d="M9 18.5 8 21M13 18.5 12 21M17 18.5 16 21" />
+    </SvgIcon>
+  );
+}
+
 export function InfoIcon(props: UiIconProps) {
   return (
     <SvgIcon {...props}>
