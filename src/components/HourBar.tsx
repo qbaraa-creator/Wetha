@@ -1,8 +1,9 @@
 import { useId, useRef, useState } from 'react';
-import { SEVERITY_SHORT_LABELS } from '../config/appConfig';
+import { SEVERITY_GLYPHS, SEVERITY_SHORT_LABELS } from '../config/appConfig';
 import { displayNumber } from '../domain/narrative';
+import { assessActivityHour, describeActivityAssessment } from '../domain/outdoorActivity';
 import { formatHour12 } from '../domain/time';
-import { DIRECTION_NAMES_AR, describeWindReason, getWindReasonCode } from '../domain/wind';
+import { DIRECTION_NAMES_AR } from '../domain/wind';
 import type { HourlyWeatherPoint } from '../domain/types';
 
 interface HourBarProps {
@@ -17,13 +18,16 @@ interface HourBarProps {
 
 function describeMeasurements(point: HourlyWeatherPoint): string[] {
   const parts = [formatHour12(point.localHour)];
+  // لا نخفي سبب الحالة بتقريب 14.9 إلى 15 أو 49.9 إلى 50 عند حدود المصفوفة.
+  const exact = (value: number | null) =>
+    value !== null && Number.isFinite(value) ? String(value) : '—';
 
   if (point.direction && point.windDegree !== null) {
     parts.push(`قادمة من ${DIRECTION_NAMES_AR[point.direction]} ${Math.round(point.windDegree)}°`);
   }
-  parts.push(`سرعة ${displayNumber(point.windSpeedKmh)} كم/س`);
+  parts.push(`سرعة ${exact(point.windSpeedKmh)} كم/س`);
   parts.push(`هبّة ${displayNumber(point.windGustKmh)} كم/س`);
-  parts.push(`رطوبة ${displayNumber(point.humidity)}%`);
+  parts.push(`رطوبة ${exact(point.humidity)}%`);
   return parts;
 }
 
@@ -31,19 +35,9 @@ function describeMeasurements(point: HourlyWeatherPoint): string[] {
 export function describeHour(point: HourlyWeatherPoint): string {
   const parts = describeMeasurements(point);
 
-  if (point.windSeverity) {
-    const reason =
-      point.direction && point.windSpeedKmh !== null
-        ? describeWindReason(
-            getWindReasonCode(point.direction, point.windSpeedKmh),
-            point.direction
-          )
-        : '';
-    parts.push(`رياح ${SEVERITY_SHORT_LABELS[point.windSeverity]}${reason ? ` — ${reason}` : ''}`);
-  }
-  if (point.humiditySeverity) {
-    parts.push(`رطوبة ${SEVERITY_SHORT_LABELS[point.humiditySeverity]}`);
-  }
+  const assessment = assessActivityHour(point);
+  if (assessment.severity) parts.push(`الحالة ${SEVERITY_SHORT_LABELS[assessment.severity]}`);
+  parts.push(describeActivityAssessment(assessment, point));
   if (point.directionSmoothed) {
     parts.push('اتجاه مُدمج مع الساعات المحيطة');
   }
@@ -57,12 +51,12 @@ export function describeHourValues(point: HourlyWeatherPoint): string {
 }
 
 /**
- * شريط ساعي مركّب من 24 خلية: النصف الأعلى للرياح والأسفل للرطوبة.
+ * شريط ساعي من 24 خلية، لكل ساعة حالة واحدة من مصفوفة الشروط الثلاثة.
  * التنقل بلوحة المفاتيح داخل الشريط بالأسهم مع محطة Tab واحدة (القسم 21.7)،
  * والتفاصيل تُعرض في لوحة نصية أسفل الشريط لا في تلميح يعتمد على Hover وحده.
  *
  * اللمس يُعالَج على مستوى الشريط كله لا على الخلية: الخلية عرضها ~10 بكسل على
- * شاشة 320، فإصابتها بالإصبع شبه مستحيلة. الشريط بارتفاع 44 بكسل يستقبل اللمسة
+ * شاشة 320، فإصابتها بالإصبع شبه مستحيلة. الشريط بارتفاع 48 بكسل يستقبل اللمسة
  * ويحسب الساعة من موضعها، والسحب يصحّح الاختيار بلا رفع الإصبع. الخلايا تبقى
  * عناصر `option` لقارئة الشاشة ولوحة المفاتيح.
  */
@@ -135,8 +129,8 @@ export function HourBar({
   };
 
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    // الفأرة تتبع المؤشر بلا ضغط؛ اللمس والقلم يتطلبان سحبًا بعد الضغط.
-    if (!isScrubbing && event.pointerType !== 'mouse') return;
+    // القراءة بالنقر والسحب فقط؛ Hover قد يحرّك زر التفاصيل أثناء التوجه إليه.
+    if (!isScrubbing) return;
     setSelected(hourAt(event.clientX));
   };
 
@@ -147,12 +141,8 @@ export function HourBar({
     setIsScrubbing(false);
   };
 
-  const handlePointerLeave = (event: React.PointerEvent<HTMLDivElement>) => {
-    // الاختيار باللمس يبقى ظاهرًا بعد رفع الإصبع؛ الفأرة وحدها تمسحه بالمغادرة.
-    if (event.pointerType === 'mouse' && !isScrubbing) setSelected(null);
-  };
-
   const selectedPoint = selected === null ? null : slots[selected];
+  const selectedAssessment = selectedPoint ? assessActivityHour(selectedPoint) : null;
 
   return (
     <div className={`hourbar${nowHour !== null ? ' hourbar--has-now' : ''}`}>
@@ -161,6 +151,7 @@ export function HourBar({
         className="hourbar__track"
         role="listbox"
         aria-label={label}
+        aria-orientation="horizontal"
         tabIndex={0}
         aria-activedescendant={selected === null ? undefined : cellId(selected)}
         onKeyDown={handleKeyDown}
@@ -168,13 +159,10 @@ export function HourBar({
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
-        onPointerLeave={handlePointerLeave}
-        onBlur={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget as Node)) setSelected(null);
-        }}
       >
         {slots.map((point, hour) => {
           const dimmed = dimBefore !== null && hour < dimBefore;
+          const assessment = point ? assessActivityHour(point) : null;
           return (
             <div
               key={hour}
@@ -191,11 +179,7 @@ export function HourBar({
                 .join(' ')}
             >
               <span
-                className={`hourbar__lane hourbar__lane--wind hourbar__lane--${point?.windSeverity ?? 'missing'}`}
-                aria-hidden="true"
-              />
-              <span
-                className={`hourbar__lane hourbar__lane--humidity hourbar__lane--${point?.humiditySeverity ?? 'missing'}`}
+                className={`hourbar__lane hourbar__lane--${assessment?.severity ?? 'missing'}`}
                 aria-hidden="true"
               />
             </div>
@@ -220,13 +204,25 @@ export function HourBar({
         </div>
       ) : null}
 
-      <p className="hourbar__readout" aria-hidden="true">
-        {selectedPoint
-          ? describeHourValues(selectedPoint)
-          : selected !== null
-            ? `${formatHour12(selected)} · لا بيانات لهذه الساعة`
-            : ''}
-      </p>
+      {selected !== null ? (
+        <div className="hourbar__readout" aria-hidden="true">
+          {selectedPoint && selectedAssessment ? (
+            <>
+              <p className="hourbar__decision">
+                <span
+                  className={`activity-glyph activity-glyph--${selectedAssessment.severity ?? 'none'}`}
+                >
+                  {selectedAssessment.severity ? SEVERITY_GLYPHS[selectedAssessment.severity] : '○'}
+                </span>
+                {describeActivityAssessment(selectedAssessment, selectedPoint)}
+              </p>
+              <p>{describeHourValues(selectedPoint)}</p>
+            </>
+          ) : (
+            `${formatHour12(selected)} · لا بيانات لهذه الساعة`
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }

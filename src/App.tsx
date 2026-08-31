@@ -37,8 +37,8 @@ export default function App() {
             <LocationIcon size={21} />
           </span>
           <div>
-            <p className="app-header__eyebrow">توقعات الرياح والرطوبة</p>
-            <h1>طقس {LOCATION.nameAr}</h1>
+            <p className="app-header__eyebrow">{LOCATION.nameAr}</p>
+            <h1>فسحة</h1>
           </div>
         </div>
 

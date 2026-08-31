@@ -28,9 +28,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon-180.png', 'favicon.png'],
       manifest: {
-        name: 'طقس جدة — الرياح والرطوبة',
-        short_name: 'طقس جدة',
-        description: 'لوحة قراءة لرياح ورطوبة جدة على مدى سبعة أيام.',
+        name: 'فسحة',
+        short_name: 'فسحة',
+        description: 'أفضل أوقات الفسحة في جدة خلال سبعة أيام.',
         lang: 'ar',
         dir: 'rtl',
         id: './',

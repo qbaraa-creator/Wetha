@@ -22,7 +22,7 @@ describe('صفحة الأسبوع', () => {
     const forecast = makeTestForecast();
     render(<WeekPage forecast={forecast} ranking={rankWeek(forecast.days)} now={now} />);
 
-    const outlook = screen.getByRole('region', { name: 'أفضل أوقات الأنشطة الخارجية' });
+    const outlook = screen.getByRole('region', { name: 'أفضل أوقات الفسحة' });
     expect(within(outlook).getAllByRole('article')).toHaveLength(6);
     expect(
       within(outlook).queryByRole('heading', { name: /الأربعاء 19\/08\/2026/ })
@@ -32,11 +32,11 @@ describe('صفحة الأسبوع', () => {
     ).toBeVisible();
     expect(within(outlook).getByText('أفضل الأوقات المتبقية اليوم')).toBeVisible();
     expect(within(outlook).getByText('شمالية أو شمالية غربية')).toBeVisible();
-    expect(within(outlook).getByText('سرعة 15–أقل من 25 كم/س')).toBeVisible();
+    expect(within(outlook).getByText('سرعة 15–أقل من 35 كم/س')).toBeVisible();
     expect(within(outlook).getByText('رطوبة أقل من 50%')).toBeVisible();
   });
 
-  it('يعرض شريطًا مركبًا ومحورًا واحدًا فقط لكل يوم وتفاصيل مطوية افتراضيًا', () => {
+  it('يعرض شريطًا موحدًا ومحورًا واحدًا فقط لكل يوم وتفاصيل مطوية افتراضيًا', () => {
     const forecast = makeTestForecast();
     const { container } = render(
       <WeekPage forecast={forecast} ranking={rankWeek(forecast.days)} now={now} />
@@ -44,7 +44,7 @@ describe('صفحة الأسبوع', () => {
 
     expect(container.querySelectorAll('.hourbar__track')).toHaveLength(7);
     expect(container.querySelectorAll('.hourbar__axis')).toHaveLength(7);
-    expect(container.querySelectorAll('.hourbar__lane')).toHaveLength(7 * 24 * 2);
+    expect(container.querySelectorAll('.hourbar__lane')).toHaveLength(7 * 24);
     expect(container.querySelectorAll('details')).toHaveLength(7);
     expect(container.querySelectorAll('details[open]')).toHaveLength(0);
   });
@@ -58,8 +58,12 @@ describe('صفحة الأسبوع', () => {
     const summary = screen.getByText('تفاصيل الأربعاء');
     const details = summary.closest('details');
     expect(details).not.toHaveAttribute('open');
+    const bar = screen.getByRole('listbox', { name: /ليوم الأربعاء/ });
+    fireEvent.keyDown(bar, { key: 'Home' });
     await user.click(summary);
     expect(details).toHaveAttribute('open');
+    expect(bar.getAttribute('aria-activedescendant')).toMatch(/-h0$/);
+    expect(details?.querySelector('.part-measurements')).not.toBeNull();
     expect(screen.getAllByText('ساعات الرياح')[0]).toBeInTheDocument();
   });
 
@@ -72,7 +76,7 @@ describe('صفحة الأسبوع', () => {
     });
     for (const hour of [13, 14]) {
       forecast.days[0].hours[hour].direction = 'NW';
-      forecast.days[0].hours[hour].windSpeedKmh = 20;
+      forecast.days[0].hours[hour].windSpeedKmh = 30;
       forecast.days[0].hours[hour].humidity = 40;
     }
     render(<WeekPage forecast={forecast} ranking={rankWeek(forecast.days)} now={now} />);
@@ -126,48 +130,75 @@ describe('صفحة الأسبوع', () => {
     );
     await user.tab();
     expect(days).toHaveFocus();
-    // الشريط الساعي انتقل داخل لوحة التفاصيل، فالمحطة التالية هي فاتح اللوحة
-    // لا الشريط نفسه.
+    // الشريط أساسي ومتاح قبل فتح التفاصيل، بمحطة Tab واحدة لليوم.
+    await user.tab();
+    expect(screen.getByRole('listbox', { name: /ليوم الأربعاء/ })).toHaveFocus();
     await user.tab();
     expect(document.activeElement?.tagName.toLowerCase()).toBe('summary');
     expect(document.activeElement).toHaveTextContent(/^تفاصيل/);
   });
 
-  it('يضع الشريط الساعي داخل لوحة التفاصيل لا في الطبقة الأولى', () => {
+  it('يعرض الشريط أساسًا لكل يوم ويحذف بطاقات الفترات دون نقلها للتفاصيل', () => {
     const forecast = makeTestForecast();
     const { container } = render(
       <WeekPage forecast={forecast} ranking={rankWeek(forecast.days)} now={now} />
     );
 
-    // jsdom لا يخفي محتوى <details> المغلق، فيُتحقق من موضع الشريط في الشجرة
-    // بدل الاعتماد على ظهوره — والمتصفح هو من يخرجه من ترتيب Tab.
     const bars = container.querySelectorAll('.hourbar');
-    expect(bars.length).toBeGreaterThan(0);
-    bars.forEach((bar) => expect(bar.closest('details')).not.toBeNull());
-    // الطبقة الأولى صارت صفوف الفترات
-    expect(container.querySelectorAll('.day-row__parts .daypart').length).toBe(
-      forecast.days.length * 5
-    );
+    expect(bars).toHaveLength(7);
+    bars.forEach((bar) => expect(bar.closest('details')).toBeNull());
+    expect(container.querySelectorAll('.dayparts, .daypart, .day-row__parts')).toHaveLength(0);
+    expect(container.querySelectorAll('details .hourbar')).toHaveLength(0);
+    expect(screen.queryByText(/من \d+ س مطابقة/)).not.toBeInTheDocument();
   });
 
-  it('يشرح الفرق بين الرقم واللون مرة واحدة ويسمي المتوسط ووحدة السرعة', () => {
+  it('يحذف النصوص الزائدة ويبقي أرقام الفترات داخل التفاصيل', () => {
     const forecast = makeTestForecast();
     render(<WeekPage forecast={forecast} ranking={rankWeek(forecast.days)} now={now} />);
-    expect(screen.getAllByText(/^الأرقام: مدى سرعة الرياح ومتوسط الرطوبة/)).toHaveLength(1);
-    expect(screen.getAllByText('المتوسط')).toHaveLength(7);
-    expect(screen.getAllByText('مدى · كم/س')).toHaveLength(7);
+    expect(screen.queryByText(/^الشريط يبيّن المطابقة لشروطك ساعة بساعة/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^للمشي، الجلوس في الحديقة والبر/)).not.toBeInTheDocument();
+    expect(screen.queryByText('أفضل أوقات الأنشطة الخارجية')).not.toBeInTheDocument();
+    const tables = document.querySelectorAll('.part-measurements');
+    expect(tables).toHaveLength(7);
+    tables.forEach((table) => {
+      expect(table.closest('details')).not.toBeNull();
+      expect(table).toHaveTextContent('مدى الرياح');
+      expect(table).toHaveTextContent('متوسط الرطوبة');
+    });
   });
 
-  it('يشرح الأكثر تكرارًا والتعادل وحدود الماضي داخل مفتاح القراءة', async () => {
+  it('يعرض المصفوفة وحدود التقييم والماضي داخل مفتاح مطوي', async () => {
     vi.useRealTimers();
     const user = userEvent.setup();
     const forecast = makeTestForecast();
     render(<WeekPage forecast={forecast} ranking={rankWeek(forecast.days)} now={now} />);
-    await user.click(screen.getByRole('button', { name: 'مفتاح الألوان وكيفية القراءة' }));
+    expect(
+      screen.queryByRole('table', { name: 'مصفوفة اتجاه الرياح وسرعتها والرطوبة' })
+    ).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'كيف يُحسب التقييم؟' }));
+    const matrix = screen.getByRole('table', { name: 'مصفوفة اتجاه الرياح وسرعتها والرطوبة' });
+    expect(matrix).toBeVisible();
+    const northSpeedRow = within(matrix)
+      .getByRole('rowheader', { name: /السرعة.*شمالية \/ شمالية غربية/ })
+      .closest('tr')!;
+    expect(
+      within(northSpeedRow)
+        .getAllByRole('cell')
+        .map((cell) => cell.textContent)
+    ).toEqual(['15 إلى أقل من 35', '—', 'أقل من 15، أو 35 فأكثر']);
+    const otherSpeedRow = within(matrix)
+      .getByRole('rowheader', { name: /السرعة.*بقية الاتجاهات/ })
+      .closest('tr')!;
+    expect(
+      within(otherSpeedRow)
+        .getAllByRole('cell')
+        .map((cell) => cell.textContent)
+    ).toEqual(['15 إلى أقل من 25', '25 إلى أقل من 35']);
     expect(screen.getByRole('heading', { name: 'قراءة فترات اليوم' })).toBeVisible();
     expect(screen.getByText(/الفترة ذات الحدود المتقطعة انقضت/)).toHaveTextContent(
-      'والتعادل للأشد'
+      'جدول «أرقام الفترات» داخل التفاصيل'
     );
+    expect(screen.getByText(/هذا تقييم لتفضيلاتك، وليس حكمًا على سلامة الخروج/)).toBeVisible();
   });
 
   it.each([null, 0, 45, 100])('يظهر احتمال المطر فقط إن كان موجبًا: %s', (probability) => {

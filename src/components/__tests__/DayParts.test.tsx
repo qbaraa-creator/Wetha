@@ -1,51 +1,38 @@
 // @vitest-environment jsdom
-
 import { render, screen } from '@testing-library/react';
 import { summarizeDayParts } from '../../domain/dayParts';
 import { makeFullDay } from '../../domain/__tests__/testHelpers';
-import { DayPartList } from '../DayParts';
-
+import { DayPartMeasurements } from '../DayParts';
 const DATE = '2026-08-19';
 
-it('يميّز متوسط الرطوبة عن الحالة الأكثر تكرارًا دون تغيير التصنيف', () => {
+it('يحفظ مدى السرعة ومتوسط الرطوبة في جدول أرقام محايد', () => {
   const hours = makeFullDay(
     DATE,
     { direction: 'NW', speed: 20, humidity: 49 },
-    {
-      3: { humidity: 65 },
-      4: { humidity: 65 },
-      5: { humidity: 65 }
-    }
+    { 3: { humidity: 65 }, 4: { humidity: 65 }, 5: { humidity: 65 } }
   );
-  const dawn = summarizeDayParts(hours)[0];
-  expect(dawn.humidityMean).toBe(57);
-  expect(dawn.humiditySeverity).toBe('red'); // تعادل ثلاث ساعات خضراء وثلاث حمراء
-  render(<DayPartList parts={[dawn]} />);
+  render(<DayPartMeasurements parts={[summarizeDayParts(hours)[0]]} />);
+  expect(screen.getByRole('table', { name: 'أرقام الفترات' })).toHaveTextContent('20');
   expect(screen.getByText('57%')).toBeVisible();
-  expect(
-    screen.getByText(/متوسط الرطوبة 57 بالمئة، الحالة الأكثر تكرارًا أحمر/)
-  ).toBeInTheDocument();
-  expect(screen.getByTitle('الحالة الأكثر تكرارًا للرطوبة: أحمر')).toHaveClass('daypart__dot--red');
-  expect(screen.getByText(/مدى سرعة الرياح 20 كيلومتر في الساعة/)).toBeInTheDocument();
+  expect(screen.getByRole('columnheader', { name: 'متوسط الرطوبة' })).toBeInTheDocument();
+  expect(document.querySelector('.dayparts')).toBeNull();
+  expect(screen.queryByText(/ساعات مطابقة/)).not.toBeInTheDocument();
 });
-
-it('يبقي الفترة المنقضية مقروءة وموصوفة بدل إخفائها', () => {
+it('يسمي حدود الفترات ويصف الفترة المنقضية دون تخفيف النص', () => {
   const parts = summarizeDayParts(
     makeFullDay(DATE, { direction: 'NW', speed: 20, humidity: 40 }),
     6
   );
-  render(<DayPartList parts={[parts[0], parts[1]]} />);
-  const rows = screen.getAllByRole('listitem');
+  render(<DayPartMeasurements parts={[parts[0], parts[1]]} />);
+  const rows = screen.getAllByRole('row').slice(1);
   expect(rows[0]).toHaveClass('is-past');
   expect(rows[1]).not.toHaveClass('is-past');
   expect(rows[0]).toHaveTextContent('فترة انقضت');
+  expect(screen.getByRole('rowheader', { name: /فجر.*من 12:00 ص إلى 6:00 ص/ })).toBeInTheDocument();
+  expect(screen.getByText('12ص–6ص')).toBeVisible();
 });
-
-it('لا يحول الفترة الفارغة إلى رقم أو حالة مناسبة', () => {
-  render(<DayPartList parts={[summarizeDayParts([])[0]]} />);
-  const row = screen.getByRole('listitem');
-  expect(row).toHaveClass('is-empty');
-  expect(row).toHaveTextContent('سرعة غير متاحة');
-  expect(row).toHaveTextContent('رطوبة غير متاحة');
-  expect(row.querySelectorAll('.daypart__dot--none')).toHaveLength(2);
+it('يبقي الفترات بلا بيانات شرطات بدل أرقام مختلقة', () => {
+  render(<DayPartMeasurements parts={[summarizeDayParts([])[0]]} />);
+  expect(screen.getAllByText('—')).toHaveLength(2);
+  expect(screen.getByRole('rowheader')).toHaveTextContent('لا بيانات لهذه الفترة');
 });

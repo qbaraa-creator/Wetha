@@ -25,7 +25,7 @@ describe.each(['green-base', 'orange-base', 'red-base', 'ink-muted', 'wind-ink',
 );
 
 it('لا يخفض تباين الفترات المنقضية بالشفافية أو المرشحات', () => {
-  const pastRule = stylesheet.match(/\.daypart\.is-past\s*\{([^}]+)\}/)?.[1];
+  const pastRule = stylesheet.match(/\.part-measurements tr\.is-past\s*\{([^}]+)\}/)?.[1];
   expect(pastRule).toBeDefined();
   expect(pastRule).toMatch(/opacity:\s*1\s*;/);
   expect(pastRule).toMatch(/filter:\s*none\s*;/);

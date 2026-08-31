@@ -1,6 +1,5 @@
 import { DAY_PARTS, type DayPartId } from '../config/appConfig';
-import { worseSeverity } from './severity';
-import type { DirectionCode, HourlyWeatherPoint, Severity } from './types';
+import type { HourlyWeatherPoint } from './types';
 
 export interface DayPartSummary {
   id: DayPartId;
@@ -9,58 +8,11 @@ export interface DayPartSummary {
   endHourExclusive: number;
   /** عدد الساعات التي وصلت فعلًا ضمن الفترة، أيًا كانت قيمها. */
   hourCount: number;
-  windSeverity: Severity | null;
-  humiditySeverity: Severity | null;
   windMinKmh: number | null;
   windMaxKmh: number | null;
-  gustMaxKmh: number | null;
   humidityMean: number | null;
-  dominantDirection: DirectionCode | null;
-  /** كل ساعات الفترة انقضت بالفعل — للتخفيت البصري في بطاقة اليوم. */
+  /** كل ساعات الفترة انقضت بالفعل — لحدود الجدول المتقطعة داخل التفاصيل. */
   isPast: boolean;
-}
-
-/**
- * حالة الفترة = الحالة الأكثر تكرارًا بين ساعاتها، والتعادل يُحسم للأسوأ.
- *
- * لم نأخذ أسوأ ساعة لأن ساعة واحدة رديئة كانت ستصبغ الصباح كله؛ ولا الأولى
- * لأنها لا تمثل الفترة. الأغلبية تصف ما سيجده الخارج فعلًا خلال الفترة،
- * والتفصيل الساعي يبقى متاحًا في لوحة التفاصيل لمن أراد الدقة.
- */
-function majoritySeverity(values: Array<Severity | null>): Severity | null {
-  const counts = new Map<Severity, number>();
-  values.forEach((value) => {
-    if (value) counts.set(value, (counts.get(value) ?? 0) + 1);
-  });
-  if (counts.size === 0) return null;
-
-  let winner: Severity | null = null;
-  let best = 0;
-  counts.forEach((count, severity) => {
-    if (count > best) {
-      best = count;
-      winner = severity;
-    } else if (count === best && winner) {
-      winner = worseSeverity(winner, severity);
-    }
-  });
-  return winner;
-}
-
-function dominantOf(points: HourlyWeatherPoint[]): DirectionCode | null {
-  const counts = new Map<DirectionCode, number>();
-  points.forEach((point) => {
-    if (point.direction) counts.set(point.direction, (counts.get(point.direction) ?? 0) + 1);
-  });
-  let winner: DirectionCode | null = null;
-  let best = 0;
-  counts.forEach((count, direction) => {
-    if (count > best) {
-      best = count;
-      winner = direction;
-    }
-  });
-  return winner;
 }
 
 const finite = (values: Array<number | null>): number[] =>
@@ -81,7 +33,6 @@ export function summarizeDayParts(
     );
     const speeds = finite(points.map((point) => point.windSpeedKmh));
     const humidities = finite(points.map((point) => point.humidity));
-    const gusts = finite(points.map((point) => point.windGustKmh));
 
     return {
       id: part.id,
@@ -89,15 +40,11 @@ export function summarizeDayParts(
       startHour: part.startHour,
       endHourExclusive: part.endHourExclusive,
       hourCount: points.length,
-      windSeverity: majoritySeverity(points.map((point) => point.windSeverity)),
-      humiditySeverity: majoritySeverity(points.map((point) => point.humiditySeverity)),
       windMinKmh: speeds.length ? Math.min(...speeds) : null,
       windMaxKmh: speeds.length ? Math.max(...speeds) : null,
-      gustMaxKmh: gusts.length ? Math.max(...gusts) : null,
       humidityMean: humidities.length
         ? humidities.reduce((sum, value) => sum + value, 0) / humidities.length
         : null,
-      dominantDirection: dominantOf(points),
       isPast: nowHour !== null && nowHour >= part.endHourExclusive
     };
   });

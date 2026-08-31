@@ -15,6 +15,7 @@ const manifest = JSON.parse(await readFile(path.join(distDir, 'manifest.webmanif
 const serviceWorker = await readFile(path.join(distDir, 'sw.js'), 'utf8');
 
 assert.match(indexHtml, /rel="manifest"/, 'صفحة الإنتاج لا تربط Manifest.');
+assert.match(indexHtml, /<title>فسحة<\/title>/, 'اسم التطبيق في عنوان الصفحة غير محدّث.');
 assert.match(indexHtml, /registerSW\.js/, 'صفحة الإنتاج لا تسجل Service Worker.');
 assert.match(indexHtml, /Content-Security-Policy/, 'سياسة CSP غير موجودة في صفحة الإنتاج.');
 assert.match(
@@ -26,6 +27,8 @@ assert.doesNotMatch(indexHtml, /worker-src[^;"]*blob:/, 'سماح عامل HMR �
 assert.doesNotMatch(indexHtml, /\/src\/main\.tsx/, 'صفحة الإنتاج ما زالت تشير إلى مصدر التطوير.');
 
 assert.equal(manifest.lang, 'ar');
+assert.equal(manifest.name, 'فسحة');
+assert.equal(manifest.short_name, 'فسحة');
 assert.equal(manifest.dir, 'rtl');
 assert.equal(manifest.display, 'standalone');
 assert.equal(manifest.id, './');

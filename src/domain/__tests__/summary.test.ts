@@ -47,6 +47,22 @@ describe('القسم 5.5 — الاتجاه العام', () => {
 });
 
 describe('القسمان 6.3 و21.5 — ملخص اليوم', () => {
+  it('يحسب الشمالية الغربية بسرعة 30 خضراء في العداد والفترات مع بقاء 35 حمراء', () => {
+    const hours = makeFullDay(
+      '2026-08-19',
+      { direction: 'NW', speed: 30, humidity: 40 },
+      {
+        12: { direction: 'NW', speed: 35, humidity: 40 }
+      }
+    );
+    const summary = buildDailySummary('2026-08-19', hours, noAstronomy);
+    expect(summary.windHoursBySeverity).toEqual({ green: 23, orange: 0, red: 1 });
+    expect(summary.windSegments.map((segment) => segment.severity)).toEqual([
+      'green',
+      'red',
+      'green'
+    ]);
+  });
   it('مجموع ساعات كل لون يساوي عدد الساعات الصالحة', () => {
     const hours = makeFullDay(
       '2026-08-19',

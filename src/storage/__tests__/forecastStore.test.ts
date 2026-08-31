@@ -68,6 +68,16 @@ describe('تخزين التوقع ومسارات السقوط الآمن', () =>
     expect(await loadForecast(LOCATION.id)).toBeNull();
   });
 
+  it('يرفض تصنيفات الإصدار 3 القديمة في المخزنين ويقبل البيانات المعاد حسابها', async () => {
+    const stale = { ...storedForecast(), schemaVersion: 3 };
+    await seedIndexedDb(stale);
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(stale));
+    expect(await loadForecast(LOCATION.id)).toBeNull();
+    const fresh = storedForecast();
+    await saveForecast(fresh.forecast);
+    expect(await loadForecast(LOCATION.id)).toEqual(fresh);
+  });
+
   it('لا يستبدل السجل الناجح بتوقع بلا أيام', async () => {
     const record = storedForecast();
     await saveForecast(record.forecast);

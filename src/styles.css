@@ -334,12 +334,6 @@ button {
   font-size: clamp(1rem, 4.5vw, 1.15rem);
 }
 
-.green-outlook__head p {
-  margin-top: 2px;
-  color: var(--ink-muted);
-  font-size: max(var(--text-min), 0.77rem);
-}
-
 .green-outlook__criteria {
   position: relative;
   display: flex;
@@ -564,7 +558,7 @@ button {
   min-width: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-areas: 'head' 'facts' 'parts' 'more';
+  grid-template-areas: 'head' 'facts' 'map' 'more';
   gap: 10px;
   padding: 13px;
   border: 1px solid var(--line-soft);
@@ -593,8 +587,8 @@ button {
 .day-row__facts {
   grid-area: facts;
 }
-.day-row__parts {
-  grid-area: parts;
+.day-row__map {
+  grid-area: map;
 }
 .day-row__details {
   grid-area: more;
@@ -834,105 +828,19 @@ button {
 .day-row__map-head > span:first-child svg {
   color: var(--wind-ink);
 }
-.day-row__map-head > span:nth-child(2) svg {
-  color: var(--humidity-ink);
-}
-.day-row__map-head small {
-  margin-inline-start: auto;
-}
+/* ————— مفتاح القراءة وأرقام الفترات المطوية ————— */
 
-.lane-mark {
-  width: 9px;
-  height: 4px;
-  border-radius: 999px;
-  background: var(--ink-muted);
-}
-
-.lane-mark--wind {
-  opacity: 0.9;
-}
-.lane-mark--humidity {
-  opacity: 0.55;
-}
-
-/* ————— فترات اليوم: الطبقة الأولى في بطاقة اليوم ————— */
-
-.week-reading-note {
-  padding-inline: 4px;
+.green-outlook__disclaimer {
+  margin-block: 8px;
   color: var(--ink-muted);
-  font-size: max(var(--text-min), 0.82rem);
+  font-size: var(--text-min);
 }
 
 .legend__group--reading {
   grid-column: 1 / -1;
 }
 
-.day-row__parts {
-  min-width: 0;
-}
-
-.day-row__parts-head {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 86px 68px;
-  gap: 6px;
-  padding: 0 11px 5px;
-  color: var(--ink-muted);
-  font-size: var(--text-min);
-  font-weight: 650;
-}
-
-.day-row__parts-head > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.day-row__parts-head > .daypart__metric {
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0;
-}
-
-.day-row__parts-head .daypart__metric > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.day-row__parts-head .daypart__metric--wind {
-  color: var(--wind-ink);
-}
-.day-row__parts-head .daypart__metric--humidity {
-  color: var(--humidity-ink);
-}
-
-.dayparts {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-/*
- * صف قراءة غير تفاعلي؛ لكل مؤشر رمز حالة مستقل بجانب الرقم.
- * الماضي يُميّز بالخلفية والحد المتقطع، دون إضعاف تباين النص أو رموز الحالة.
- */
-.daypart {
-  min-width: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 86px 68px;
-  align-items: center;
-  gap: 6px;
-  min-height: 44px;
-  padding: 6px 10px;
-  border: 1px solid var(--line-soft);
-  border-radius: 10px;
-  background: var(--card-soft);
-}
-
-.daypart.is-past {
+.part-measurements tr.is-past {
   opacity: 1;
   filter: none;
   background: var(--card);
@@ -940,72 +848,32 @@ button {
   border-style: dashed;
 }
 
-.daypart.is-empty {
-  background: var(--card-soft);
-}
-
-.daypart__when {
-  min-width: 0;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0 6px;
-  font-size: max(var(--text-min), 0.82rem);
-}
-
-/* نقطة الحالة تسبق رقم كل مؤشر، فيبقى المساران مقروءين مستقلين. */
-.daypart__dot {
+/* رمز حالة الساعة المختارة؛ لا يعتمد معنى الحالة على اللون وحده. */
+.activity-glyph {
   flex: 0 0 auto;
   font-size: var(--text-min);
   line-height: 1;
 }
 
-.daypart__dot--green {
+.activity-glyph--green {
   color: var(--green-base);
 }
-.daypart__dot--orange {
+.activity-glyph--orange {
   color: var(--orange-base);
 }
-.daypart__dot--red {
+.activity-glyph--red {
   color: var(--red-base);
 }
-.daypart__dot--none {
+.activity-glyph--none {
   color: var(--neutral-base);
 }
 
-.daypart__label {
-  flex: 0 0 auto;
-  color: var(--ink);
-  font-weight: 700;
-}
-
-.daypart__when .timerange {
+.part-measurements__time {
+  display: block;
   color: var(--ink-muted);
   font-size: var(--text-min);
+  font-weight: 400;
   white-space: nowrap;
-}
-
-.daypart__metric {
-  min-width: 0;
-  display: flex;
-  align-items: baseline;
-  justify-content: flex-end;
-  gap: 4px;
-  font-size: max(var(--text-min), 0.86rem);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.daypart__metric small {
-  font-size: var(--text-min);
-  font-weight: 500;
-}
-
-.daypart__metric--wind {
-  color: var(--wind-ink);
-}
-.daypart__metric--humidity {
-  color: var(--humidity-ink);
 }
 
 /* التفاصيل داخل البطاقة */
@@ -1201,8 +1069,7 @@ button {
 .hourbar__cell {
   min-width: 0;
   display: grid;
-  grid-template-rows: repeat(2, minmax(0, 1fr));
-  gap: 2px;
+  grid-template-rows: minmax(0, 1fr);
   overflow: hidden;
   border-radius: 2px;
   pointer-events: none;
@@ -1283,8 +1150,13 @@ button {
   font-size: max(var(--text-min), 0.78rem);
 }
 
-.hourbar__readout:empty {
-  display: none;
+.hourbar__decision {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 4px;
+  font-weight: 700;
+  color: var(--ink);
 }
 
 /* مفتاح القراءة */
@@ -1357,6 +1229,52 @@ button {
   margin-top: 5px;
   color: var(--ink-muted);
   font-size: max(var(--text-min), 0.8rem);
+}
+
+.criteria-matrix,
+.part-measurements {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  margin-top: 12px;
+  font-size: max(var(--text-min), 0.82rem);
+  color: var(--ink-soft);
+}
+
+.criteria-matrix th,
+.criteria-matrix td,
+.part-measurements th,
+.part-measurements td {
+  padding: 8px 4px;
+  border: 1px solid var(--line);
+  vertical-align: middle;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.criteria-matrix th:first-child {
+  width: 20%;
+}
+
+.criteria-matrix th,
+.part-measurements th {
+  background: var(--card-soft);
+}
+
+.criteria-matrix td > span {
+  display: block;
+}
+
+.part-measurements caption {
+  text-align: start;
+  margin-bottom: 8px;
+  color: var(--ink-soft);
+  font-weight: 700;
+}
+
+.part-measurements tr.is-past > * {
+  background: var(--card);
+  border-style: dashed;
 }
 
 /* حالات التحميل والخطأ */
@@ -1501,7 +1419,7 @@ button {
 
   .day-row {
     grid-template-columns: minmax(155px, 200px) minmax(0, 1fr);
-    grid-template-areas: 'head facts' 'parts parts' 'more more';
+    grid-template-areas: 'head facts' 'map map' 'more more';
     gap: 12px 18px;
   }
 
@@ -1540,13 +1458,10 @@ button {
 
   .day-row {
     grid-template-columns: 175px 250px minmax(0, 1fr);
-    grid-template-areas: 'head facts parts' 'more more more';
+    grid-template-areas: 'head facts map' 'more more more';
     align-items: start;
   }
 
-  .day-row__map-head small {
-    display: none;
-  }
   .legend__body {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
@@ -1573,9 +1488,6 @@ button {
     clip-path: inset(50%);
   }
 
-  .day-row__map-head small {
-    display: none;
-  }
   .day-row__stat {
     padding: 7px 5px;
   }

@@ -40,6 +40,9 @@ describe('التطبيق الرئيسي', () => {
     render(<App />);
 
     expect(screen.getByRole('main', { name: 'توقعات جدة' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'فسحة', level: 1 })).toBeVisible();
+    expect(screen.getByText('جدة')).toBeVisible();
+    expect(screen.queryByText('طقس جدة')).not.toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: 'التنقل الرئيسي' })).not.toBeInTheDocument();
     expect(screen.queryByText('اليوم المختار')).not.toBeInTheDocument();
   });

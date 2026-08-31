@@ -75,14 +75,41 @@ describe('القسم 21.4 — التجميع الزمني', () => {
     expect(segments[1].startHour).toBe(2);
   });
 
-  it('4) اتجاه ثابت N مع 14 و18 و27 ينتج ثلاث فترات أحمر ثم أخضر ثم برتقالي', () => {
+  it('4) اتجاه ثابت N مع 14 و18 و27 و35 ينتج أحمر ثم أخضر ممتد ثم أحمر', () => {
     const hours = makeHours('2026-08-19', [
       { direction: 'N', speed: 14 },
       { direction: 'N', speed: 18 },
-      { direction: 'N', speed: 27 }
+      { direction: 'N', speed: 27 },
+      { direction: 'N', speed: 35 }
     ]);
     const segments = buildWindSegments(smoothDirectionJitter(hours));
-    expect(segments.map((segment) => segment.severity)).toEqual(['red', 'green', 'orange']);
+    expect(segments.map((segment) => segment.severity)).toEqual(['red', 'green', 'red']);
+    expect(segments[1]).toMatchObject({
+      startHour: 1,
+      endHourExclusive: 3,
+      reasonCode: 'direction-and-speed-ok'
+    });
+  });
+
+  it('يعيد تقييم استثناء السرعة بعد تنعيم الاتجاه ولا يغير البيانات الأصلية', () => {
+    const hours = makeHours('2026-08-19', [
+      { direction: 'NW', speed: 30 },
+      { direction: 'W', speed: 30 },
+      { direction: 'NW', speed: 30 }
+    ]);
+    const smoothed = smoothDirectionJitter(hours);
+    expect(hours[1]).toMatchObject({
+      direction: 'W',
+      speedSeverity: 'orange',
+      windSeverity: 'orange'
+    });
+    expect(smoothed[1]).toMatchObject({
+      direction: 'NW',
+      rawDirection: 'W',
+      speedSeverity: 'green',
+      windSeverity: 'green'
+    });
+    expect(buildWindSegments(smoothed)).toHaveLength(1);
   });
 
   it('5) رطوبة 49 ثم 50 ثم 65 تنتج أخضر ثم برتقالي ثم أحمر', () => {

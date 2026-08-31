@@ -58,6 +58,21 @@ describe('طبقة المزود — القسم 12', () => {
     ).toBe(23);
   });
 
+  it('يوحّد استثناء السرعة في لقطة الآن والنقاط الساعية وملخص اليوم', () => {
+    const payload = fixture();
+    payload.current.wind_direction_10m = 315;
+    payload.current.wind_speed_10m = 30;
+    payload.hourly.wind_direction_10m.fill(315);
+    payload.hourly.wind_speed_10m.fill(30);
+    const forecast = normalize(payload);
+    expect(forecast.current?.windSeverity).toBe('green');
+    expect(forecast.days[0].hours[0]).toMatchObject({
+      speedSeverity: 'green',
+      windSeverity: 'green'
+    });
+    expect(forecast.days[0].windHoursBySeverity).toEqual({ green: 24, orange: 0, red: 0 });
+  });
+
   it('يرفض الحقل ذا الوحدة غير المتوقعة ولا يحوّله صامتًا', () => {
     const payload = fixture();
     payload.hourly_units.wind_speed_10m = 'mp/h';

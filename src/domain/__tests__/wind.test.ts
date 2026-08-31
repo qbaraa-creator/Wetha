@@ -5,6 +5,7 @@ import {
   getDirectionSeverity,
   getSpeedBand,
   getSpeedSeverity,
+  getWindReasonCode,
   getWindSeverity,
   normalizeDegrees
 } from '../wind';
@@ -71,7 +72,12 @@ describe('القسم 21.2 — السرعة والدمج', () => {
     ['N', 14.99, 'red'],
     ['N', 15, 'green'],
     ['NW', 24.99, 'green'],
-    ['NW', 25, 'orange'],
+    ['NW', 25, 'green'],
+    ['N', 25, 'green'],
+    ['N', 34.99, 'green'],
+    ['NW', 34.99, 'green'],
+    ['N', 35, 'red'],
+    ['NW', 35, 'red'],
     ['E', 30, 'orange'],
     ['NE', 30, 'orange'],
     ['W', 30, 'orange'],
@@ -87,10 +93,21 @@ describe('القسم 21.2 — السرعة والدمج', () => {
   it('أمثلة القسم 5.3 الملزمة', () => {
     expect(getWindSeverity('N', 12)).toBe('red');
     expect(getWindSeverity('NW', 20)).toBe('green');
-    expect(getWindSeverity('N', 31)).toBe('orange');
+    expect(getWindSeverity('N', 31)).toBe('green');
     expect(getWindSeverity('E', 31)).toBe('orange');
     expect(getWindSeverity('S', 31)).toBe('red');
     expect(getWindSeverity('SE', 18)).toBe('red');
     expect(getWindSeverity('SW', 40)).toBe('red');
+  });
+
+  it('لا يذكر سبب الرياح القوية للاتجاهين المفضلين إلا عند بلوغ حد الشديدة', () => {
+    for (const direction of ['N', 'NW'] as const) {
+      expect(getSpeedSeverity(30, direction)).toBe('green');
+      expect(getWindReasonCode(direction, 30)).toBe('direction-and-speed-ok');
+      expect(getWindReasonCode(direction, 35)).toBe('speed-severe');
+      expect(getWindReasonCode(direction, 14)).toBe('speed-low');
+    }
+    expect(getSpeedSeverity(30, null)).toBe('orange');
+    expect(getWindReasonCode('W', 30)).toBe('speed-strong');
   });
 });

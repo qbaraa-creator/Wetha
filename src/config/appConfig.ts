@@ -27,6 +27,9 @@ export const SPEED_THRESHOLDS = {
   severeMinKmh: 35
 } as const;
 
+/** تبقى السرعة القوية مناسبة لهذه الاتجاهات، دون تجاوز حد الرياح الشديدة. */
+export const STRONG_WIND_GREEN_DIRECTIONS: readonly DirectionCode[] = ['N', 'NW'];
+
 /**
  * عتبات الرطوبة النسبية: أقل من 50 أخضر، 50–أقل من 65 برتقالي، و65 فأكثر أحمر.
  */
@@ -60,7 +63,7 @@ export const DOMINANT_DIRECTION_MIN_SHARE = 0.5;
 export const DIRECTION_CHANGE_MIN_HOURS = 2;
 
 /**
- * فترات اليوم التي تُعرض في الطبقة الأولى من بطاقة اليوم.
+ * فترات اليوم التي تُعرض أرقامها داخل تفاصيل بطاقة اليوم.
  *
  * لا تتداخل ولا تلتف حول منتصف الليل: كل ساعة من 0 إلى 23 تقع في فترة واحدة
  * بالضبط، فيبقى الترتيب المعروض هو الترتيب الزمني ولا تظهر ساعات أول اليوم
@@ -83,8 +86,8 @@ export const REFRESH_POLICY = {
   maxRetries: 1
 } as const;
 
-/** الإصدار 3 يضيف العظمى والصغرى واحتمال الهطول؛ لا يتغير لمجرد تشديد التحقق. */
-export const STORAGE_SCHEMA_VERSION = 3;
+/** الإصدار 4 يبطل التصنيفات المحفوظة قبل توسيع السرعة المناسبة للشمالية والشمالية الغربية. */
+export const STORAGE_SCHEMA_VERSION = 4;
 
 export const SEVERITY_SHORT_LABELS: Record<Severity, string> = {
   green: 'أخضر',

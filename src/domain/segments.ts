@@ -19,7 +19,8 @@ export function buildHourlyPoint(input: {
 }): HourlyWeatherPoint {
   const direction = input.windDegree === null ? null : degreeToDirection(input.windDegree);
   const directionSeverity = direction === null ? null : getDirectionSeverity(direction);
-  const speedSeverity = input.windSpeedKmh === null ? null : getSpeedSeverity(input.windSpeedKmh);
+  const speedSeverity =
+    input.windSpeedKmh === null ? null : getSpeedSeverity(input.windSpeedKmh, direction);
   const windSeverity =
     directionSeverity === null || speedSeverity === null
       ? null
@@ -67,6 +68,8 @@ export function smoothDirectionJitter(points: HourlyWeatherPoint[]): HourlyWeath
     current.direction = merged;
     current.directionSmoothed = true;
     current.directionSeverity = directionSeverity;
+    current.speedSeverity =
+      current.windSpeedKmh === null ? null : getSpeedSeverity(current.windSpeedKmh, merged);
     current.windSeverity =
       current.speedSeverity === null
         ? null

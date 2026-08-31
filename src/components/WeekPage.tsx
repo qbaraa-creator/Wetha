@@ -1,4 +1,5 @@
 import type { KeyboardEvent } from 'react';
+import { HUMIDITY_THRESHOLDS, SPEED_THRESHOLDS } from '../config/appConfig';
 import {
   displayNumber,
   formatDirectionNarrative,
@@ -16,14 +17,13 @@ import {
 } from '../domain/time';
 import { getCombinedDirectionSeverity } from '../domain/wind';
 import type { DailySummary, NormalizedForecast, WeekRanking } from '../domain/types';
-import { DayPartList } from './DayParts';
+import { DayPartMeasurements } from './DayParts';
 import { HourBar } from './HourBar';
 import { Legend } from './Legend';
 import { Num, TimeRange } from './Num';
 import { SeverityBadge, SeverityCounts } from './SeverityBadge';
 import {
   ChevronIcon,
-  ClockIcon,
   CompassIcon,
   DropletIcon,
   GustIcon,
@@ -144,10 +144,7 @@ export function WeekPage({ forecast, ranking, now }: WeekPageProps) {
           <span className="section-icon" aria-hidden="true">
             <SparklesIcon size={20} />
           </span>
-          <div>
-            <h2 id="green-outlook-title">أفضل أوقات الأنشطة الخارجية</h2>
-            <p>للمشي، الجلوس في الحديقة والبر خلال الأيام السبعة القادمة</p>
-          </div>
+          <h2 id="green-outlook-title">أفضل أوقات الفسحة</h2>
         </header>
 
         <div className="green-outlook__criteria" aria-label="معايير الوقت المناسب">
@@ -155,13 +152,17 @@ export function WeekPage({ forecast, ranking, now }: WeekPageProps) {
             <CompassIcon size={16} /> شمالية أو شمالية غربية
           </span>
           <span>
-            <WindIcon size={16} /> سرعة 15–أقل من 25 كم/س
+            <WindIcon size={16} /> سرعة {SPEED_THRESHOLDS.greenMinKmh}–أقل من{' '}
+            {SPEED_THRESHOLDS.severeMinKmh} كم/س
           </span>
           <span>
-            <DropletIcon size={16} /> رطوبة أقل من 50%
+            <DropletIcon size={16} /> رطوبة أقل من {HUMIDITY_THRESHOLDS.greenMaxExclusive}%
           </span>
         </div>
 
+        <p className="green-outlook__disclaimer">
+          وفق تفضيلاتك؛ الحرارة والمطر والهبّات لا تدخل التقييم.
+        </p>
         <section className="green-outlook__today" aria-labelledby="today-activity-title">
           <div>
             <span className="chip chip--today">اليوم</span>
@@ -210,10 +211,6 @@ export function WeekPage({ forecast, ranking, now }: WeekPageProps) {
         </div>
       </section>
 
-      <p className="week-reading-note">
-        الأرقام: مدى سرعة الرياح ومتوسط الرطوبة. اللون: الحالة الأكثر تكرارًا بين ساعات الفترة، وليس
-        لون المتوسط؛ والتعادل للأشد.
-      </p>
       <div className="week-days">
         {days.map((day) => (
           <DayRow
@@ -315,9 +312,9 @@ function DayRow({ day, isToday, nowHour, isMostHumid, isLeastHumid }: DayRowProp
         </p>
 
         {/*
-          السرعة ومتوسط الرطوبة كانا هنا لأن الشريط اللوني لم يحمل أي رقم.
-          صفوف الفترات صارت تعطيهما بدقة أعلى، فبقاؤهما تكرار. الهبّة القصوى
-          وحدها لا تُشتق من الفترات فتبقى ظاهرة.
+          أرقام الرياح والرطوبة محفوظة في جدول الفترات داخل التفاصيل.
+          النظرة الأولى للقرار والسبب؛ تبقى الهبّة القصوى ظاهرة لأنها خارج
+          مصفوفة التفضيلات ولا ينبغي أن يخفيها لون المطابقة.
         */}
         <p className="day-row__gust">
           <GustIcon size={16} />
@@ -329,23 +326,19 @@ function DayRow({ day, isToday, nowHour, isMostHumid, isLeastHumid }: DayRowProp
         </p>
       </div>
 
-      <div className="day-row__parts">
-        <div className="day-row__parts-head" aria-hidden="true">
-          <span className="daypart__when">الفترة</span>
-          <span className="daypart__metric daypart__metric--wind">
-            <span>
-              <WindIcon size={14} /> رياح
-            </span>
-            <small>مدى · كم/س</small>
-          </span>
-          <span className="daypart__metric daypart__metric--humidity">
-            <span>
-              <DropletIcon size={14} /> رطوبة
-            </span>
-            <small>المتوسط</small>
+      <div className="day-row__map">
+        <div className="day-row__map-head" aria-hidden="true">
+          <span>
+            <SparklesIcon size={15} /> المطابقة لشروطك
           </span>
         </div>
-        <DayPartList parts={parts} />
+        <HourBar
+          hours={day.hours}
+          label={`شريط المطابقة للشروط الساعي ليوم ${dayName} ${dateText}`}
+          nowHour={nowHour}
+          dimBefore={dimBefore}
+          showAxis
+        />
       </div>
 
       <details className="day-row__details">
@@ -357,29 +350,8 @@ function DayRow({ day, isToday, nowHour, isMostHumid, isLeastHumid }: DayRowProp
         </summary>
         <div className="day-row__details-body">
           <div className="day-row__detail-group day-row__detail-group--wide">
-            <h3>
-              <ClockIcon size={16} /> الساعات بالتفصيل
-            </h3>
-            <div className={`day-row__map${nowHour !== null ? ' day-row__map--has-now' : ''}`}>
-              <div className="day-row__map-head" aria-hidden="true">
-                <span>
-                  <WindIcon size={15} /> رياح <i className="lane-mark lane-mark--wind" />
-                </span>
-                <span>
-                  <DropletIcon size={15} /> رطوبة <i className="lane-mark lane-mark--humidity" />
-                </span>
-                <small>اسحب على الشريط لقراءة الساعة</small>
-              </div>
-              <HourBar
-                hours={day.hours}
-                label={`شريط الرياح والرطوبة الساعي ليوم ${dayName} ${dateText}`}
-                nowHour={nowHour}
-                dimBefore={dimBefore}
-                showAxis
-              />
-            </div>
+            <DayPartMeasurements parts={parts} />
           </div>
-
           <div className="day-row__detail-group">
             <h3>
               <WindIcon size={16} /> ساعات الرياح
