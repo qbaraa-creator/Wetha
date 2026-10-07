@@ -3,6 +3,7 @@ import {
   DIRECTION_SECTORS,
   DIRECTION_SEVERITY,
   HUMIDITY_THRESHOLDS,
+  TEMPERATURE_THRESHOLDS_C,
   SPEED_THRESHOLDS,
   STRONG_WIND_GREEN_DIRECTIONS
 } from '../config/appConfig';
@@ -34,11 +35,11 @@ export function Legend() {
           <div className="legend__group legend__group--reading">
             <h3>مصفوفة الشروط</h3>
             <p className="legend__note">
-              حالة الساعة هي الأشد بين الاتجاه والسرعة والرطوبة في الساعة نفسها، وليس متوسط ألوانها.
-              يعرض الشريط حالة واحدة وتظهر جميع أسباب عدم المطابقة عند اختيار الساعة.
+              حالة الساعة هي الأشد بين الاتجاه والسرعة والرطوبة والحرارة في الساعة نفسها، وليس متوسط
+              ألوانها. يعرض الشريط حالة واحدة وتظهر جميع أسباب عدم المطابقة عند اختيار الساعة.
             </p>
             <table className="criteria-matrix">
-              <caption className="sr-only">مصفوفة اتجاه الرياح وسرعتها والرطوبة</caption>
+              <caption className="sr-only">مصفوفة اتجاه الرياح وسرعتها والرطوبة والحرارة</caption>
               <thead>
                 <tr>
                   <th scope="col">المعيار</th>
@@ -102,6 +103,15 @@ export function Legend() {
                   </td>
                   <td>{HUMIDITY_THRESHOLDS.redMinInclusive}% فأكثر</td>
                 </tr>
+                <tr>
+                  <th scope="row">الحرارة (°م)</th>
+                  <td>أقل من {TEMPERATURE_THRESHOLDS_C.greenMaxExclusive}</td>
+                  <td>
+                    {TEMPERATURE_THRESHOLDS_C.greenMaxExclusive} إلى أقل من{' '}
+                    {TEMPERATURE_THRESHOLDS_C.redMinInclusive}
+                  </td>
+                  <td>{TEMPERATURE_THRESHOLDS_C.redMinInclusive} فأكثر</td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -116,9 +126,9 @@ export function Legend() {
           <div className="legend__group">
             <h3>حدود التقييم</h3>
             <p className="legend__note">
-              هذا تقييم لتفضيلاتك، وليس حكمًا على سلامة الخروج. الحرارة والمطر والهبّات لا تدخل
-              الحساب. الاتجاه هو الجهة التي تأتي منها الرياح. البيانات الناقصة تظهر بحالة محايدة، مع
-              بيان الحقول غير المتاحة وأي أسباب معروفة.
+              هذا تقييم لتفضيلاتك، وليس حكمًا على سلامة الخروج. المطر والهبّات لا تدخل الحساب.
+              الاتجاه هو الجهة التي تأتي منها الرياح. البيانات الناقصة تظهر بحالة محايدة، مع بيان
+              الحقول غير المتاحة وأي أسباب معروفة.
             </p>
           </div>
         </div>

@@ -23,6 +23,7 @@ const ENDPOINT = 'https://api.open-meteo.com/v1/forecast';
 
 const HOURLY_FIELDS = [
   'relative_humidity_2m',
+  'temperature_2m',
   'wind_speed_10m',
   'wind_direction_10m',
   'wind_gusts_10m'
@@ -50,6 +51,7 @@ const CURRENT_FIELDS = [
 /** الوحدات المتوقعة؛ أي انحراف يرفض الحقل ولا يُحوَّل صامتًا (القسم 16). */
 const EXPECTED_HOURLY_UNITS: Record<string, string> = {
   relative_humidity_2m: '%',
+  temperature_2m: '°C',
   wind_speed_10m: 'km/h',
   wind_direction_10m: '°',
   wind_gusts_10m: 'km/h'
@@ -318,6 +320,15 @@ export function normalizeOpenMeteoResponse(
     'hourly',
     warnings
   );
+  const temperature = readNumbers(
+    payload.hourly,
+    'temperature_2m',
+    rejectedHourly,
+    hourlyAxis,
+    RANGES.temperature,
+    'hourly',
+    warnings
+  );
   const speed = readNumbers(
     payload.hourly,
     'wind_speed_10m',
@@ -351,6 +362,7 @@ export function normalizeOpenMeteoResponse(
     const point = buildHourlyPoint({
       timeIso,
       humidity: humidity[index],
+      temperatureC: temperature[index],
       windSpeedKmh: speed[index],
       windGustKmh: gust[index],
       windDegree: degree[index]

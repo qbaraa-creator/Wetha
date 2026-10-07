@@ -83,6 +83,7 @@ function isHourlyPoint(value: unknown): value is HourlyWeatherPoint {
     value.localHour >= 0 &&
     value.localHour <= 23 &&
     isNullableNumber(value.humidity) &&
+    isNullableTemperature(value.temperatureC) &&
     isNullableNumber(value.windSpeedKmh) &&
     isNullableNumber(value.windGustKmh) &&
     isNullableNumber(value.windDegree) &&

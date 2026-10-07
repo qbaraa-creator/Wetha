@@ -1,4 +1,5 @@
 import { getHumiditySeverity } from './humidity';
+import { getTemperatureSeverity } from './temperature';
 import { worseSeverity } from './severity';
 import { DIRECTION_NAMES_AR, getDirectionSeverity, getSpeedBand, getSpeedSeverity } from './wind';
 import type { HourlyWeatherPoint, Severity } from './types';
@@ -9,7 +10,9 @@ export type ActivityReasonCode =
   | 'speed-strong'
   | 'speed-severe'
   | 'humidity-elevated'
-  | 'humidity-high';
+  | 'humidity-high'
+  | 'temperature-elevated'
+  | 'temperature-high';
 
 export interface ActivityReason {
   code: ActivityReasonCode;
@@ -29,7 +32,9 @@ export const ACTIVITY_REASON_LABELS: Record<ActivityReasonCode, string> = {
   'speed-strong': 'رياح قوية',
   'speed-severe': 'رياح شديدة',
   'humidity-elevated': 'رطوبة أعلى من المفضّل',
-  'humidity-high': 'رطوبة مرتفعة'
+  'humidity-high': 'رطوبة مرتفعة',
+  'temperature-elevated': 'حرارة مرتفعة',
+  'temperature-high': 'حرارة شديدة'
 };
 
 /** تقييم تفضيلات، لا تقييم سلامة: المصدر المشترك للشريط ونوافذ الأنشطة. */
@@ -70,6 +75,20 @@ export function assessActivityHour(point: HourlyWeatherPoint): ActivityAssessmen
     add(humiditySeverity, humiditySeverity === 'red' ? 'humidity-high' : 'humidity-elevated');
   }
 
+  if (
+    point.temperatureC === null ||
+    point.temperatureC === undefined ||
+    !Number.isFinite(point.temperatureC)
+  ) {
+    missing.push('الحرارة');
+  } else {
+    const temperatureSeverity = getTemperatureSeverity(point.temperatureC);
+    add(
+      temperatureSeverity,
+      temperatureSeverity === 'red' ? 'temperature-high' : 'temperature-elevated'
+    );
+  }
+
   return {
     severity: missing.length ? null : severity,
     // تقديم الأسباب الأشد لا يعني إسقاط بقية الأسباب.
@@ -100,8 +119,9 @@ export interface ActivityWindow {
 }
 
 /**
- * ساعة مناسبة للنشاط الخارجي فقط عندما تتزامن الشروط الثلاثة:
- * اتجاه شمالي/شمالي غربي، سرعة ضمن المجال الأخضر، ورطوبة ضمن المجال الأخضر.
+ * ساعة مناسبة للنشاط الخارجي فقط عندما تتزامن الشروط الأربعة:
+ * اتجاه شمالي/شمالي غربي، سرعة ضمن المجال الأخضر، رطوبة ضمن المجال الأخضر،
+ * وحرارة أقل من 35°م.
  */
 export function isOutdoorActivityHour(point: HourlyWeatherPoint): boolean {
   return assessActivityHour(point).severity === 'green';

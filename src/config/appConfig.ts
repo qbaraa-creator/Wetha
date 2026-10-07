@@ -38,6 +38,14 @@ export const HUMIDITY_THRESHOLDS = {
   redMinInclusive: 65
 } as const;
 
+/**
+ * عتبات حرارة الساعة لمصفوفة الملاءمة: أقل من 35°م أخضر، 35–أقل من 40 برتقالي، و40°م فأكثر أحمر.
+ */
+export const TEMPERATURE_THRESHOLDS_C = {
+  greenMaxExclusive: 35,
+  redMinInclusive: 40
+} as const;
+
 /** حدود صلاحية الحرارة بالمئوية؛ مشتركة بين المزود والتخزين، وليست عتبات راحة. */
 export const TEMPERATURE_LIMITS_C = { min: -90, max: 60 } as const;
 
@@ -86,8 +94,8 @@ export const REFRESH_POLICY = {
   maxRetries: 1
 } as const;
 
-/** الإصدار 4 يبطل التصنيفات المحفوظة قبل توسيع السرعة المناسبة للشمالية والشمالية الغربية. */
-export const STORAGE_SCHEMA_VERSION = 4;
+/** الإصدار 5 يبطل السجلات المحفوظة قبل إضافة الحرارة الساعية إلى مصفوفة الملاءمة. */
+export const STORAGE_SCHEMA_VERSION = 5;
 
 export const SEVERITY_SHORT_LABELS: Record<Severity, string> = {
   green: 'أخضر',

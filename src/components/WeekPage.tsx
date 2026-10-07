@@ -1,5 +1,9 @@
 import type { KeyboardEvent } from 'react';
-import { HUMIDITY_THRESHOLDS, SPEED_THRESHOLDS } from '../config/appConfig';
+import {
+  HUMIDITY_THRESHOLDS,
+  SPEED_THRESHOLDS,
+  TEMPERATURE_THRESHOLDS_C
+} from '../config/appConfig';
 import {
   displayNumber,
   formatDirectionNarrative,
@@ -158,11 +162,13 @@ export function WeekPage({ forecast, ranking, now }: WeekPageProps) {
           <span>
             <DropletIcon size={16} /> رطوبة أقل من {HUMIDITY_THRESHOLDS.greenMaxExclusive}%
           </span>
+          <span>
+            <ThermometerIcon size={16} /> حرارة أقل من {TEMPERATURE_THRESHOLDS_C.greenMaxExclusive}
+            °م
+          </span>
         </div>
 
-        <p className="green-outlook__disclaimer">
-          وفق تفضيلاتك؛ الحرارة والمطر والهبّات لا تدخل التقييم.
-        </p>
+        <p className="green-outlook__disclaimer">وفق تفضيلاتك؛ المطر والهبّات لا تدخل التقييم.</p>
         <section className="green-outlook__today" aria-labelledby="today-activity-title">
           <div>
             <span className="chip chip--today">اليوم</span>

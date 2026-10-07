@@ -173,10 +173,12 @@ describe('صفحة الأسبوع', () => {
     const forecast = makeTestForecast();
     render(<WeekPage forecast={forecast} ranking={rankWeek(forecast.days)} now={now} />);
     expect(
-      screen.queryByRole('table', { name: 'مصفوفة اتجاه الرياح وسرعتها والرطوبة' })
+      screen.queryByRole('table', { name: 'مصفوفة اتجاه الرياح وسرعتها والرطوبة والحرارة' })
     ).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'كيف يُحسب التقييم؟' }));
-    const matrix = screen.getByRole('table', { name: 'مصفوفة اتجاه الرياح وسرعتها والرطوبة' });
+    const matrix = screen.getByRole('table', {
+      name: 'مصفوفة اتجاه الرياح وسرعتها والرطوبة والحرارة'
+    });
     expect(matrix).toBeVisible();
     const northSpeedRow = within(matrix)
       .getByRole('rowheader', { name: /السرعة.*شمالية \/ شمالية غربية/ })
@@ -194,6 +196,14 @@ describe('صفحة الأسبوع', () => {
         .getAllByRole('cell')
         .map((cell) => cell.textContent)
     ).toEqual(['15 إلى أقل من 25', '25 إلى أقل من 35']);
+    const temperatureRow = within(matrix)
+      .getByRole('rowheader', { name: /الحرارة/ })
+      .closest('tr')!;
+    expect(
+      within(temperatureRow)
+        .getAllByRole('cell')
+        .map((cell) => cell.textContent)
+    ).toEqual(['أقل من 35', '35 إلى أقل من 40', '40 فأكثر']);
     expect(screen.getByRole('heading', { name: 'قراءة فترات اليوم' })).toBeVisible();
     expect(screen.getByText(/الفترة ذات الحدود المتقطعة انقضت/)).toHaveTextContent(
       'جدول «أرقام الفترات» داخل التفاصيل'

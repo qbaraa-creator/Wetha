@@ -18,6 +18,7 @@ export interface HourSpec {
   speed?: number | null;
   gust?: number | null;
   humidity?: number | null;
+  temperature?: number | null;
 }
 
 export function makeHours(date: string, specs: HourSpec[]): HourlyWeatherPoint[] {
@@ -25,6 +26,7 @@ export function makeHours(date: string, specs: HourSpec[]): HourlyWeatherPoint[]
     buildHourlyPoint({
       timeIso: buildIso(date, index),
       humidity: spec.humidity ?? null,
+      temperatureC: spec.temperature === undefined ? 30 : spec.temperature,
       windSpeedKmh: spec.speed ?? null,
       windGustKmh: spec.gust ?? null,
       windDegree:

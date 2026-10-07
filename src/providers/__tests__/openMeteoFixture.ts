@@ -13,6 +13,7 @@ export function fixture() {
     timezone: 'Asia/Riyadh',
     hourly_units: {
       relative_humidity_2m: '%',
+      temperature_2m: '°C',
       wind_speed_10m: 'km/h',
       wind_direction_10m: '°',
       wind_gusts_10m: 'km/h'
@@ -42,6 +43,7 @@ export function fixture() {
     hourly: {
       time: [...HOURS],
       relative_humidity_2m: HOURS.map(() => 74) as Array<number | null | undefined>,
+      temperature_2m: HOURS.map(() => 33) as Array<number | null | undefined>,
       wind_speed_10m: HOURS.map(() => 20) as Array<number | null | undefined>,
       wind_direction_10m: HOURS.map(() => 315) as Array<number | null | undefined>,
       wind_gusts_10m: HOURS.map(() => 31) as Array<number | null | undefined>

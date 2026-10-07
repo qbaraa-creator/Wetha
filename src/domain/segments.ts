@@ -13,6 +13,7 @@ import type { DirectionSegment, HourlyWeatherPoint, TimeSegment } from './types'
 export function buildHourlyPoint(input: {
   timeIso: string;
   humidity: number | null;
+  temperatureC?: number | null;
   windSpeedKmh: number | null;
   windGustKmh: number | null;
   windDegree: number | null;
@@ -31,6 +32,7 @@ export function buildHourlyPoint(input: {
     localDate: isoDatePart(input.timeIso),
     localHour: isoHourPart(input.timeIso),
     humidity: input.humidity,
+    temperatureC: input.temperatureC ?? null,
     windSpeedKmh: input.windSpeedKmh,
     windGustKmh: input.windGustKmh,
     windDegree: input.windDegree,

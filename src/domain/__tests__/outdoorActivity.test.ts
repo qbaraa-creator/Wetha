@@ -198,3 +198,49 @@ describe('مصفوفة الملاءمة الموحّدة', () => {
     ]);
   });
 });
+
+describe('الحرارة في مصفوفة الملاءمة', () => {
+  it.each([
+    [20, 'green'],
+    [34.99, 'green'],
+    [35, 'orange'],
+    [39.99, 'orange'],
+    [40, 'red'],
+    [47, 'red']
+  ])('حرارة %s°م مع بقية العوامل الخضراء = %s', (temperature, expected) => {
+    const point = makeHours('2026-08-19', [
+      { direction: 'NW', speed: 20, humidity: 40, temperature: Number(temperature) }
+    ])[0];
+    expect(assessActivityHour(point).severity).toBe(expected);
+    expect(isOutdoorActivityHour(point)).toBe(expected === 'green');
+  });
+
+  it('الحرارة المرتفعة تمنع الأخضر وتظهر سببًا مستقلًا', () => {
+    const point = makeHours('2026-08-19', [
+      { direction: 'N', speed: 20, humidity: 40, temperature: 36 }
+    ])[0];
+    const assessment = assessActivityHour(point);
+    expect(assessment.reasons.map((reason) => reason.code)).toEqual(['temperature-elevated']);
+    expect(describeActivityAssessment(assessment, point)).toBe('حرارة مرتفعة');
+  });
+
+  it('الحرارة المفقودة تجعل التقييم غير مكتمل', () => {
+    const point = makeHours('2026-08-19', [
+      { direction: 'N', speed: 20, humidity: 40, temperature: null }
+    ])[0];
+    expect(assessActivityHour(point).severity).toBeNull();
+    expect(isOutdoorActivityHour(point)).toBe(false);
+  });
+
+  it('تقطع النافذة عند ساعة حارة', () => {
+    const hours = makeHours('2026-08-19', [
+      { direction: 'N', speed: 20, humidity: 40, temperature: 30 },
+      { direction: 'N', speed: 20, humidity: 40, temperature: 35 },
+      { direction: 'N', speed: 20, humidity: 40, temperature: 34 }
+    ]);
+    expect(findOutdoorActivityWindows(hours)).toEqual([
+      { startHour: 0, endHourExclusive: 1 },
+      { startHour: 2, endHourExclusive: 3 }
+    ]);
+  });
+});

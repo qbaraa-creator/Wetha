@@ -28,6 +28,7 @@ function describeMeasurements(point: HourlyWeatherPoint): string[] {
   parts.push(`سرعة ${exact(point.windSpeedKmh)} كم/س`);
   parts.push(`هبّة ${displayNumber(point.windGustKmh)} كم/س`);
   parts.push(`رطوبة ${exact(point.humidity)}%`);
+  parts.push(`حرارة ${exact(point.temperatureC)}°م`);
   return parts;
 }
 

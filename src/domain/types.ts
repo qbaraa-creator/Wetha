@@ -18,6 +18,8 @@ export interface HourlyWeatherPoint {
   localDate: string;
   localHour: number;
   humidity: number | null;
+  /** حرارة الساعة بالمئوية؛ تدخل مصفوفة الملاءمة فقط، ولا لون مخزَّن لها. */
+  temperatureC: number | null;
   windSpeedKmh: number | null;
   windGustKmh: number | null;
   windDegree: number | null;
@@ -73,7 +75,7 @@ export interface DailySummary {
   windSegments: TimeSegment[];
   humiditySegments: TimeSegment[];
   directionSegments: DirectionSegment[];
-  /** العظمى والصغرى بالدرجة المئوية — عرض فقط، لا تدخل أي تصنيف لون. */
+  /** العظمى والصغرى بالدرجة المئوية — عرض فقط؛ تصنيف الساعة يعتمد الحرارة الساعية. */
   temperatureMaxC: number | null;
   temperatureMinC: number | null;
   /** أعلى احتمال هطول في اليوم بالنسبة المئوية؛ يُخفى عند الصفر. */
